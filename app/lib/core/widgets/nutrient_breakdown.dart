@@ -1,8 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 
-import '../../../core/domain/domain.dart';
-import '../../../core/format/number_format.dart';
-import '../../../core/widgets/widgets.dart';
+import '../domain/food_item.dart';
+import '../domain/nutrient.dart';
+import '../format/number_format.dart';
+import 'layout.dart';
 
 /// Nutrient totals for a meal. A nutrient that no item reports shows as
 /// unavailable, and a partial total says how many items it covers.

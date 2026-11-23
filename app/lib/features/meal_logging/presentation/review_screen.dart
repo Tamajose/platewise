@@ -7,7 +7,6 @@ import '../../../core/presentation/review_args.dart';
 import '../../../core/theme/plate_theme.dart';
 import '../../../core/widgets/widgets.dart';
 import 'food_estimate_editor.dart';
-import 'nutrient_breakdown.dart';
 import 'review_controller.dart';
 
 /// Check a meal estimate, change its foods and portions, and log it. Also used
