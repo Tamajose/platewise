@@ -47,6 +47,24 @@ These ratios are computed from the token values in `plate_theme.dart` and checke
 Disabled controls use Material 3 disabled-state styling. The border and grid tokens serve nontext separation. System focus, enabled and disabled button states were inspected in the Flutter web demo and widget tests.
 
 
+## Component map
+
+Shared widgets live in `app/lib/core/widgets/`. Feature code imports them through `widgets.dart`.
+
+| File | Components |
+|---|---|
+| `brand.dart` | `PlateMark`, `Wordmark` |
+| `layout.dart` | `PageScroll`, `AdaptiveColumns`, `Standalone`, `BottomAction`, `Surface` |
+| `buttons.dart` | `PrimaryButton`, `SecondaryButton` |
+| `headings.dart` | `SectionTitle`, `PageHeading` |
+| `cards.dart` | `MetricCard` |
+| `indicators.dart` | `IndicatorTag`, `DisclaimerNotice`, `IconTile` |
+| `states.dart` | `LoadingState`, `ErrorState`, `EmptyState` |
+| `media.dart` | `FoodPicture` |
+| `dialogs.dart` | `ConfirmationSheet` |
+
+`ConfidenceBadge` is not in this set. It depends on the `Confidence` domain type, so it moves with that type into the meal-logging feature. Number formatting is in `app/lib/core/format/number_format.dart`.
+
 ## Open issue: body text does not render in Inter
 
 `plateTheme()` sets `fontFamily: 'Inter'` on `ThemeData`, then replaces most text styles with `textTheme.copyWith(...)` using styles that carry no family. Those replacements discard Inter, so body, title and small headline text fall back to the platform default font. Only the DM Serif Text headings, which name their family explicitly, and any untouched styles keep a bundled font. This was found while migrating the theme and is carried over unchanged. The fix is to name `Inter` on each non-serif style, which changes the look of most text, so it needs a design decision before it is made.
