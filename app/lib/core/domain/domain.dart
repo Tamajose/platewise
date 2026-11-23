@@ -15,6 +15,7 @@ export 'overview.dart';
 export 'overview_repository.dart';
 export 'photo_picker.dart';
 export 'profile.dart';
+export 'profile_repository.dart';
 export 'session_repository.dart';
 export 'suggested_budget.dart';
 export 'target_policy.dart';

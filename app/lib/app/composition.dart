@@ -12,6 +12,7 @@ import '../core/data/auth/auth_session.dart';
 import '../core/data/core_providers.dart';
 import '../core/data/demo/demo_store.dart';
 import '../core/data/media/demo_media_storage.dart';
+import '../core/data/profile/profile_repositories.dart';
 import '../core/data/media/image_picker_photo_picker.dart';
 import '../core/data/media/live_media_storage.dart';
 import '../core/data/overview/demo_overview_repository.dart';
@@ -25,8 +26,8 @@ import '../features/meal_logging/data/demo_meal_log_repository.dart';
 import '../features/nearby/data/geolocator_location_service.dart';
 import '../features/onboarding/data/onboarding_providers.dart';
 import '../features/onboarding/data/onboarding_repositories.dart';
-import '../features/profile/data/profile_providers.dart';
-import '../features/profile/data/profile_repositories.dart';
+import '../features/settings/data/settings_providers.dart';
+import '../features/settings/data/settings_repositories.dart';
 import '../features/today/data/today_providers.dart';
 import '../features/water/data/water_providers.dart';
 import '../features/weekly/data/weekly_providers.dart';
@@ -99,6 +100,9 @@ Future<List<Override>> composeOverrides(
       waterRepositoryProvider.overrideWithValue(DemoWaterRepository(store)),
       weeklyRepositoryProvider.overrideWithValue(DemoWeeklyRepository(store)),
       profileRepositoryProvider.overrideWithValue(DemoProfileRepository(store)),
+      settingsRepositoryProvider.overrideWithValue(
+        DemoSettingsRepository(store),
+      ),
       onboardingRepositoryProvider.overrideWithValue(
         DemoOnboardingRepository(store),
       ),
@@ -158,6 +162,12 @@ Future<List<Override>> composeOverrides(
     waterRepositoryProvider.overrideWithValue(LiveWaterRepository(api)),
     weeklyRepositoryProvider.overrideWithValue(LiveWeeklyRepository(api)),
     profileRepositoryProvider.overrideWithValue(LiveProfileRepository(api)),
+    settingsRepositoryProvider.overrideWithValue(
+      LiveSettingsRepository(
+        api,
+        signOutLocally: () => client.auth.signOut(scope: SignOutScope.local),
+      ),
+    ),
     onboardingRepositoryProvider.overrideWithValue(
       const LiveOnboardingRepository(),
     ),

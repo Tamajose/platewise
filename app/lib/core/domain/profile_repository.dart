@@ -1,4 +1,4 @@
-import '../../../core/domain/profile.dart';
+import 'profile.dart';
 
 abstract interface class ProfileRepository {
   /// Saves the profile. [targetConfirmed] says the person confirmed that

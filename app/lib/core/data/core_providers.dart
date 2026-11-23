@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../domain/media_storage.dart';
 import '../domain/overview_repository.dart';
 import '../domain/photo_picker.dart';
+import '../domain/profile_repository.dart';
 import '../domain/session_repository.dart';
 import 'ids.dart';
 
@@ -34,4 +35,9 @@ final idGeneratorProvider = Provider<IdGenerator>((ref) => newId);
 /// Tests override this.
 final urlOpenerProvider = Provider<Future<bool> Function(Uri)>(
   (ref) => launchUrl,
+);
+
+/// Overridden by the composition root with the demo or live implementation.
+final profileRepositoryProvider = Provider<ProfileRepository>(
+  (ref) => throw StateError('Profile repository initialization required'),
 );
