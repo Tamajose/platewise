@@ -36,6 +36,8 @@ jobs:
           supabase/functions/_shared/http.ts
           supabase/functions/_shared/privacy.ts
           supabase/functions/_shared/progress.ts
+          supabase/functions/_shared/decision.ts
+          supabase/functions/_shared/audio.ts
       - run: deno test --allow-env --config supabase/functions/deno.json supabase/functions/_shared
   database:
     runs-on: ubuntu-latest
