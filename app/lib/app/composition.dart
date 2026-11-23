@@ -1,5 +1,7 @@
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart' show Ref;
 import 'package:flutter_riverpod/misc.dart' show Override;
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -20,6 +22,10 @@ import '../features/comparison/data/comparison_providers.dart';
 import '../features/comparison/data/demo_comparison_repository.dart';
 import '../features/comparison/data/live_comparison_repository.dart';
 import '../features/meal_logging/data/demo_meal_log_repository.dart';
+import '../features/nearby/data/geolocator_location_service.dart';
+import '../features/nearby/data/nearby_providers.dart';
+import '../features/nearby/data/nearby_repositories.dart';
+import '../features/nearby/data/overpass_restaurant_search.dart';
 import '../features/meal_logging/data/demo_speech_transcriber.dart';
 import '../features/meal_logging/data/live_meal_log_repository.dart';
 import '../features/meal_logging/data/live_speech_transcriber.dart';
@@ -74,6 +80,12 @@ Future<List<Override>> composeOverrides(
       comparisonRepositoryProvider.overrideWithValue(
         DemoComparisonRepository(),
       ),
+      nearbyRepositoryProvider.overrideWithValue(
+        DemoNearbyRepository(
+          () => rootBundle.loadString('assets/data/seeded_menus.json'),
+        ),
+      ),
+      ..._nearbyServices(),
     ];
   }
   if (!config.canConnect) {
@@ -124,6 +136,8 @@ Future<List<Override>> composeOverrides(
     comparisonRepositoryProvider.overrideWithValue(
       LiveComparisonRepository(api),
     ),
+    nearbyRepositoryProvider.overrideWithValue(LiveNearbyRepository(api)),
+    ..._nearbyServices(),
   ];
 }
 
@@ -133,3 +147,11 @@ VoiceRecorder _deviceRecorder(Ref ref) {
   ref.onDispose(recorder.dispose);
   return recorder;
 }
+
+/// Restaurant search and device location are the same in demo and live mode.
+List<Override> _nearbyServices() => [
+  restaurantSearchProvider.overrideWithValue(
+    OverpassRestaurantSearch(http.Client()),
+  ),
+  locationServiceProvider.overrideWithValue(const GeolocatorLocationService()),
+];

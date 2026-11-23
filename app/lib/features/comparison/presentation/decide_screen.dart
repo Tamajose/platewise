@@ -10,7 +10,6 @@ import '../../../core/presentation/routes.dart';
 import '../../../core/presentation/session_state.dart';
 import '../../../core/theme/plate_theme.dart';
 import '../../../core/widgets/widgets.dart';
-import '../domain/compare_photos.dart';
 import '../domain/decision.dart';
 import 'decide_controller.dart';
 import 'decision_results.dart';

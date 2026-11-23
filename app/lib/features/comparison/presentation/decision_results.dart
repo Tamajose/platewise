@@ -6,24 +6,6 @@ import '../../../core/theme/plate_theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../domain/decision.dart';
 
-class BudgetFitBadge extends StatelessWidget {
-  const BudgetFitBadge(this.fit, {super.key});
-  final BudgetFit fit;
-
-  @override
-  Widget build(BuildContext context) {
-    final calm = fit == BudgetFit.fits || fit == BudgetFit.noBudget;
-    return IndicatorTag(
-      fit.label,
-      icon: fit == BudgetFit.fits
-          ? Icons.check_circle_outline
-          : Icons.info_outline,
-      foreground: calm ? PlateColors.forest : PlateColors.amberInk,
-      background: calm ? PlateColors.sage : PlateColors.amber,
-    );
-  }
-}
-
 /// The ranked options, any that failed, and a way to retry.
 class DecisionResults extends StatelessWidget {
   const DecisionResults(

@@ -8,6 +8,7 @@ import '../features/comparison/presentation/decide_screen.dart';
 import '../features/comparison/presentation/menu_review_args.dart';
 import '../features/comparison/presentation/menu_review_screen.dart';
 import '../features/meal_logging/presentation/capture_screen.dart';
+import '../features/nearby/presentation/nearby_screen.dart';
 import '../features/meal_logging/presentation/review_screen.dart';
 
 /// Maps each route path to a screen. Screens navigate by path, so this is the
@@ -30,6 +31,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         redirect: (_, state) =>
             state.extra is MenuReviewArgs ? null : Routes.decide,
         builder: (_, state) => MenuReviewScreen(state.extra! as MenuReviewArgs),
+      ),
+      GoRoute(
+        path: Routes.nearby,
+        builder: (_, _) => Scaffold(
+          appBar: AppBar(title: const Text('Nearby')),
+          body: const NearbyScreen(),
+        ),
       ),
       GoRoute(path: Routes.log, builder: (_, _) => const CaptureScreen()),
       GoRoute(
@@ -64,6 +72,11 @@ class _TemporaryHome extends StatelessWidget {
           OutlinedButton(
             onPressed: () => context.push(Routes.decide),
             child: const Text('Decide'),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton(
+            onPressed: () => context.push(Routes.nearby),
+            child: const Text('Nearby'),
           ),
         ],
       ),

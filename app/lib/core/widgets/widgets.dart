@@ -2,6 +2,7 @@
 library;
 
 export 'brand.dart';
+export 'budget_fit_badge.dart';
 export 'buttons.dart';
 export 'cards.dart';
 export 'confidence_badge.dart';

@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:platewise/core/domain/domain.dart';
-import 'package:platewise/features/comparison/domain/decision.dart';
 
 void main() {
   test('edge boundaries and tie handling agree with server vectors', () {
