@@ -9,7 +9,6 @@ jobs:
   # Placeholder so the workflow is valid while the repository is assembled.
   # Real jobs are added by the steps that introduce their code:
   #   backend database (B1), backend Deno checks (B2), app (F1).
-  #   B3 and B4 extend the functions job as their files land.
   foundation:
     runs-on: ubuntu-latest
     steps:
@@ -28,16 +27,7 @@ jobs:
           deno-version: v2.9.6
       - run: deno fmt --check --config supabase/functions/deno.json supabase/functions
       - run: deno lint --config supabase/functions/deno.json supabase/functions
-      # Entry points are listed explicitly until the handler lands (B4).
-      - run: >-
-          deno check --config supabase/functions/deno.json
-          supabase/functions/_shared/contracts.ts
-          supabase/functions/_shared/providers.ts
-          supabase/functions/_shared/http.ts
-          supabase/functions/_shared/privacy.ts
-          supabase/functions/_shared/progress.ts
-          supabase/functions/_shared/decision.ts
-          supabase/functions/_shared/audio.ts
+      - run: deno check --config supabase/functions/deno.json supabase/functions/platewise/index.ts
       - run: deno test --allow-env --config supabase/functions/deno.json supabase/functions/_shared
   database:
     runs-on: ubuntu-latest
