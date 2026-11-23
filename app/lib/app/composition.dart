@@ -16,6 +16,9 @@ import '../core/data/overview/demo_overview_repository.dart';
 import '../core/data/overview/live_overview_repository.dart';
 import '../core/data/session/demo_session_repository.dart';
 import '../core/data/session/live_session_repository.dart';
+import '../features/comparison/data/comparison_providers.dart';
+import '../features/comparison/data/demo_comparison_repository.dart';
+import '../features/comparison/data/live_comparison_repository.dart';
 import '../features/meal_logging/data/demo_meal_log_repository.dart';
 import '../features/meal_logging/data/demo_speech_transcriber.dart';
 import '../features/meal_logging/data/live_meal_log_repository.dart';
@@ -68,6 +71,9 @@ Future<List<Override>> composeOverrides(
         const DemoSpeechTranscriber(),
       ),
       voiceRecorderProvider.overrideWith(_deviceRecorder),
+      comparisonRepositoryProvider.overrideWithValue(
+        DemoComparisonRepository(),
+      ),
     ];
   }
   if (!config.canConnect) {
@@ -115,6 +121,9 @@ Future<List<Override>> composeOverrides(
     mealLogRepositoryProvider.overrideWithValue(LiveMealLogRepository(api)),
     speechTranscriberProvider.overrideWithValue(LiveSpeechTranscriber(api)),
     voiceRecorderProvider.overrideWith(_deviceRecorder),
+    comparisonRepositoryProvider.overrideWithValue(
+      LiveComparisonRepository(api),
+    ),
   ];
 }
 

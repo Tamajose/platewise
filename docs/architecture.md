@@ -58,7 +58,7 @@ Placement follows rule 2: a type is shared only when more than one feature uses 
 | Location | Types and rules |
 |---|---|
 | `core/domain/` | `CalorieRange`, `Nutrient` and `nutrientTotals`, `FoodItem`, `MealDraft`, `SavedMeal`, `MealSource`, `Confidence`, `Profile`, the target policy, `Overview`, `DayLog`, `WaterEntry`, `TargetSnapshot`, `BudgetFit`, `distanceKm`, date helpers, and `Failure` |
-| `features/comparison/domain/` | `compareFit`, `fitReason`, `MenuOption`, `DecisionOption`, `RankedMeal`, `DecisionResult` |
+| `features/comparison/domain/` | `compareFit`, `fitReason`, `MenuOption`, `DecisionOption`, `RankedMeal`, `DecisionResult`, `ComparisonRepository`, the `ComparePhotos` use case, `suggestedBudget`, and the budget and dish input rules |
 | `features/nearby/domain/` | `NearbyMeal` |
 | `features/weekly/domain/` | `WeeklyReport`, `WeeklySummary` |
 | `features/settings/domain/` | `calculateEnergy`, `EnergyEstimate`, `Correction` |
@@ -111,7 +111,8 @@ Each step is one branch and one pull request.
 | F2 | Flutter | Domain layer: shared entities in `core/domain`, feature-owned entities and logic in each feature's `domain/`, the `Failure` type, the architecture test, and domain tests. JSON conversion is left out of entities on purpose |
 | F3 | Flutter | Data core: API client, auth session, demo store, JSON mappers for the shared entities, session and overview repositories (demo and live), the testable composition root, and a contract test against the SQL migrations |
 | F4 | Flutter | Meal logging (the reference slice): capture by photo, text or voice, review and edit, save. Adds the photo picker and media storage to the core, `ConfidenceBadge`, the router, and a temporary start screen for trying it |
-| F5–F12 | Flutter | Decide, nearby, today, water, weekly, onboarding, settings, auth |
+| F5 | Flutter | Decide: compare menu dishes or two or three photos against a budget, menu review, and the `ComparePhotos` use case |
+| F6–F12 | Flutter | Nearby, today, water, weekly, onboarding, settings, auth |
 | D3 | Design | UX, accessibility and copy review of the finished app (the web shell and icons arrive in F1) |
 | B6 | Backend | Restructure the Edge Function into domain, infrastructure, providers and handler layers, with an import-scanning test |
 | W1 | Shared | Final docs, web demo launcher, Playwright browser checks and verification |
