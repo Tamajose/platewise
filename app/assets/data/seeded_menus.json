@@ -1,0 +1,19 @@
+[
+ {"id":"cumilla-banyan","name":"Banyan Canteen","latitude":23.4592,"longitude":91.1847,"menu":[
+   {"id":"cumilla-banyan-khichuri","name":"Vegetable khichuri","portion":"1 medium bowl","calorie_low":360,"calorie_high":490,"protein_g":13,"fiber_g":5},
+   {"id":"cumilla-banyan-rice","name":"Rice, dal and vegetables","portion":"1 canteen tray","calorie_low":410,"calorie_high":560,"protein_g":14,"carbohydrate_g":78,"fiber_g":8}]},
+ {"id":"cumilla-tamarind","name":"Tamarind Table","latitude":23.4675,"longitude":91.1808,"menu":[
+   {"id":"cumilla-tamarind-tikka","name":"Chicken tikka rice bowl","portion":"1 bowl with rice","calorie_low":465,"calorie_high":590,"protein_g":29,"carbohydrate_g":66},
+   {"id":"cumilla-tamarind-fish","name":"Fish curry and rice","portion":"1 plate","calorie_low":470,"calorie_high":670,"protein_g":24}]},
+ {"id":"cumilla-lime","name":"Lime Leaf Kitchen","latitude":23.4528,"longitude":91.1718,"menu":[
+   {"id":"cumilla-lime-biryani","name":"Chicken biryani","portion":"1 medium portion","calorie_low":640,"calorie_high":850,"protein_g":31},
+   {"id":"cumilla-lime-chana","name":"Chana and roti","portion":"1 bowl of chana, 1 roti","calorie_low":330,"calorie_high":460,"protein_g":12,"fiber_g":9}]},
+ {"id":"cumilla-pond","name":"Courtyard Café","latitude":23.4498,"longitude":91.1664,"menu":[
+   {"id":"cumilla-pond-egg","name":"Egg curry, rice and greens","portion":"1 plate, 1 egg","calorie_low":470,"calorie_high":640,"protein_g":16}]},
+ {"id":"dhaka-grove","name":"Green Grove Canteen","latitude":23.738,"longitude":90.3781,"menu":[
+   {"id":"dhaka-grove-khichuri","name":"Vegetable khichuri","portion":"1 medium bowl","calorie_low":360,"calorie_high":490,"protein_g":13,"fiber_g":5},
+   {"id":"dhaka-grove-fish","name":"Fish curry and rice","portion":"1 plate","calorie_low":470,"calorie_high":670,"protein_g":24}]},
+ {"id":"dhaka-clay","name":"Clay Plate Café","latitude":23.7491,"longitude":90.3921,"menu":[
+   {"id":"dhaka-clay-tikka","name":"Chicken tikka rice bowl","portion":"1 regular bowl","calorie_low":465,"calorie_high":590,"protein_g":29,"carbohydrate_g":66},
+   {"id":"dhaka-clay-pitha","name":"Steamed bhapa pitha","portion":"2 small pieces","calorie_low":250,"calorie_high":420}]}
+]

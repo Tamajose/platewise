@@ -9,6 +9,7 @@ jobs:
   # Placeholder so the workflow is valid while the repository is assembled.
   # Real jobs are added by the steps that introduce their code:
   #   backend database (B1), backend Deno checks (B2), app (F1).
+  # The foundation job remains as a trivial always-green check.
   foundation:
     runs-on: ubuntu-latest
     steps:
@@ -29,6 +30,25 @@ jobs:
       - run: deno lint --config supabase/functions/deno.json supabase/functions tools/evaluate.ts tools/metrics.ts
       - run: deno check --config supabase/functions/deno.json supabase/functions/platewise/index.ts tools/evaluate.ts tools/metrics.ts
       - run: deno test --allow-env --config supabase/functions/deno.json supabase/functions/_shared
+  app:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.50.1'
+          channel: stable
+          cache: true
+      - run: flutter pub get --enforce-lockfile
+      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter build web --release --no-web-resources-cdn
   database:
     runs-on: ubuntu-latest
     steps:
