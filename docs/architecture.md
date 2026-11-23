@@ -31,7 +31,7 @@ app/lib/
 
 ### Rules
 
-**1. Dependency rule.** `presentation` depends on `domain`. `data` depends on `domain`. `domain` depends on neither, and imports no Flutter, Supabase or platform packages. Features never import each other. Only `main.dart` and `app/` may import several features. An architecture test enforces these rules.
+**1. Dependency rule.** `presentation` depends on `domain`. `data` depends on `domain`. `domain` depends on neither, and imports no Flutter, Supabase or platform packages. Features never import each other. Only `main.dart` and `app/` may import several features. The one exception to "presentation depends only on domain" is that presentation may import `data/` files named `*_providers.dart`, because rule 3 puts repository providers there. Domain may import only pure Dart (`dart:async`, `dart:collection`, `dart:math`, `dart:typed_data`) and the packages `collection`, `meta` and `timezone`. The architecture test in `app/test/architecture/` enforces these rules, and its own tests show that it catches each kind of violation.
 
 **2. Shared entities.** A type starts in the `domain/` of the feature that owns it. It moves to `core/domain/` only when a second feature needs it.
 
@@ -48,6 +48,22 @@ app/lib/
 **8. State.** Riverpod. Screen state lives in `Notifier` and `AsyncNotifier` controllers. Widgets render state and forward user actions.
 
 **9. Errors.** The domain defines `Failure` types. Data sources translate transport and provider errors into failures. The presentation layer maps failures to messages.
+
+### Where the domain types live
+
+Placement follows rule 2: a type is shared only when more than one feature uses it.
+
+| Location | Types and rules |
+|---|---|
+| `core/domain/` | `CalorieRange`, `Nutrient` and `nutrientTotals`, `FoodItem`, `MealDraft`, `SavedMeal`, `MealSource`, `Confidence`, `Profile`, the target policy, `Overview`, `DayLog`, `WaterEntry`, `TargetSnapshot`, `BudgetFit`, `distanceKm`, date helpers, and `Failure` |
+| `features/comparison/domain/` | `compareFit`, `fitReason`, `MenuOption`, `DecisionOption`, `RankedMeal`, `DecisionResult` |
+| `features/nearby/domain/` | `NearbyMeal` |
+| `features/weekly/domain/` | `WeeklyReport`, `WeeklySummary` |
+| `features/settings/domain/` | `calculateEnergy`, `EnergyEstimate`, `Correction` |
+| `features/auth/domain/` | `AccountInfo` |
+| `core/presentation/` | `failureMessage`, which turns a `Failure` into text for people |
+
+Entities carry no JSON. Converting to and from the API's wire format is a data-layer job, done by mappers. The wire names that mappers need, such as `Nutrient.key`, stay on the entity. `Overview.today` still reads the system clock, so tests set `localDay` instead.
 
 ## Backend
 
@@ -74,8 +90,8 @@ Each step is one branch and one pull request.
 | F1 | Flutter | App scaffold: platform folders, web shell and icons, dependencies, strict analysis, placeholder app, CI job, architecture rules, menu seed asset |
 | D1 | Design | Theme, tokens, fonts and design-system docs |
 | D2 | Design | Shared component library: `plate_widgets.dart` split into files by family, number formatting helper, widget tests. `ConfidenceBadge` is deferred to F2/F4 because it depends on the `Confidence` domain type |
-| F2 | Flutter | Domain core |
-| F3 | Flutter | Data core, the `session` feature and the composition root |
+| F2 | Flutter | Domain layer: shared entities in `core/domain`, feature-owned entities and logic in each feature's `domain/`, the `Failure` type, the architecture test, and domain tests. JSON conversion is left out of entities on purpose |
+| F3 | Flutter | Data core, the `session` feature (including `Capabilities`), the composition root, and JSON mappers for the shared entities |
 | F4 | Flutter | Meal logging (the reference slice) |
 | F5–F12 | Flutter | Decide, nearby, today, water, weekly, onboarding, settings, auth |
 | D3 | Design | UX, accessibility and copy review of the finished app (the web shell and icons arrive in F1) |
