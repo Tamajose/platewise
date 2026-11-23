@@ -11,5 +11,7 @@ export 'geo.dart';
 export 'meal.dart';
 export 'nutrient.dart';
 export 'overview.dart';
+export 'overview_repository.dart';
 export 'profile.dart';
+export 'session_repository.dart';
 export 'target_policy.dart';

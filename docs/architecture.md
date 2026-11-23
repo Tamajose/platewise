@@ -20,7 +20,9 @@ app/lib/
   main.dart             # composition root: picks demo or live, sets provider overrides
   app/                  # application shell: MaterialApp, go_router configuration
   core/
-    domain/             # entities and Failure types shared by two or more features
+    domain/             # entities, Failure and repository interfaces shared by two or more features
+    data/               # API client, auth session, demo store, JSON mappers, session and overview repositories
+    presentation/       # shared providers (overview, capabilities) and failure messages
     theme/, widgets/    # design system (owned by Design)
     config/             # build-time configuration
   features/<feature>/
@@ -31,13 +33,13 @@ app/lib/
 
 ### Rules
 
-**1. Dependency rule.** `presentation` depends on `domain`. `data` depends on `domain`. `domain` depends on neither, and imports no Flutter, Supabase or platform packages. Features never import each other. Only `main.dart` and `app/` may import several features. The one exception to "presentation depends only on domain" is that presentation may import `data/` files named `*_providers.dart`, because rule 3 puts repository providers there. Domain may import only pure Dart (`dart:async`, `dart:collection`, `dart:math`, `dart:typed_data`) and the packages `collection`, `meta` and `timezone`. The architecture test in `app/test/architecture/` enforces these rules, and its own tests show that it catches each kind of violation.
+**1. Dependency rule.** `presentation` depends on `domain`. `data` depends on `domain`. `domain` depends on neither, and imports no Flutter, Supabase or platform packages. Features never import each other, and `core/` never imports a feature. Only `main.dart` and `app/` may import several features. `core/data` and `core/presentation` follow the same layer rules as a feature's `data/` and `presentation/`. The one exception to "presentation depends only on domain" is that presentation may import `data/` files named `*_providers.dart`, because rule 3 puts repository providers there. Domain may import only pure Dart (`dart:async`, `dart:collection`, `dart:math`, `dart:typed_data`) and the packages `collection`, `meta` and `timezone`. The architecture test in `app/test/architecture/` enforces these rules, and its own tests show that it catches each kind of violation.
 
 **2. Shared entities.** A type starts in the `domain/` of the feature that owns it. It moves to `core/domain/` only when a second feature needs it.
 
 **3. Providers.** `domain/` contains no Riverpod. Repository providers live in `data/` and throw by default. `main.dart` overrides them with the live or demo implementation. Controllers and their providers live in `presentation/`. Demo and live behaviour are two implementations of the same interfaces.
 
-**4. App-level concerns.** A `session` feature owns bootstrap, capabilities and the demo or live mode. Meal photo upload belongs to meal logging, behind a media storage interface. Accounts belong to the auth feature.
+**4. App-level concerns.** The session (bootstrap, capabilities, demo or live mode) and the overview snapshot live in `core/`, not in a feature. Every feature depends on them, and `core/` may not depend on a feature, so a `session` feature would force every other feature to import it. Meal photo upload belongs to meal logging, behind a media storage interface. Accounts belong to the auth feature.
 
 **5. Use cases.** A use case exists only for real, testable logic: ranking and budget fit, weekly aggregation, distance, energy estimation and validation. A controller calls a repository directly for plain reads and writes. This is a deliberate, pragmatic deviation from strict clean architecture, so a use case that only forwards one repository call is not added.
 
@@ -63,7 +65,21 @@ Placement follows rule 2: a type is shared only when more than one feature uses 
 | `features/auth/domain/` | `AccountInfo` |
 | `core/presentation/` | `failureMessage`, which turns a `Failure` into text for people |
 
+`core/domain/` also holds the `SessionRepository` and `OverviewRepository` interfaces and the `Capabilities` type.
+
 Entities carry no JSON. Converting to and from the API's wire format is a data-layer job, done by mappers. The wire names that mappers need, such as `Nutrient.key`, stay on the entity. `Overview.today` still reads the system clock, so tests set `localDay` instead.
+
+### Data core
+
+| Piece | Role |
+|---|---|
+| `ApiClient` | Calls the versioned API with the session token. Every outcome is data or a `Failure`, including timeouts, offline and protocol errors. |
+| `AuthSession` | The session as data sources see it: user ID, opening an anonymous session, a fresh token. `SupabaseAuthSession` is the live implementation. |
+| `DemoStore` | One `Overview` kept in local preferences. Every feature's demo repository reads and changes it, so changes in one feature show in the others. Updates are serialized. |
+| Mappers | JSON to entities and back for the shared types, in `core/data/mappers/`. Each feature adds its own mappers in its `data/`. |
+| `composeOverrides` | In `app/composition.dart`. Chooses demo or live and returns the provider overrides. Each feature's step adds its repository here. `main.dart` only starts the app with them. |
+
+`test/core/data/contract_test.dart` reads the SQL migrations and checks the Dart side against them: nutrient keys, food units, meal sources, confidence levels, profile and meal columns, and the target bounds.
 
 ## Backend
 
@@ -91,7 +107,7 @@ Each step is one branch and one pull request.
 | D1 | Design | Theme, tokens, fonts and design-system docs |
 | D2 | Design | Shared component library: `plate_widgets.dart` split into files by family, number formatting helper, widget tests. `ConfidenceBadge` is deferred to F2/F4 because it depends on the `Confidence` domain type |
 | F2 | Flutter | Domain layer: shared entities in `core/domain`, feature-owned entities and logic in each feature's `domain/`, the `Failure` type, the architecture test, and domain tests. JSON conversion is left out of entities on purpose |
-| F3 | Flutter | Data core, the `session` feature (including `Capabilities`), the composition root, and JSON mappers for the shared entities |
+| F3 | Flutter | Data core: API client, auth session, demo store, JSON mappers for the shared entities, session and overview repositories (demo and live), the testable composition root, and a contract test against the SQL migrations |
 | F4 | Flutter | Meal logging (the reference slice) |
 | F5–F12 | Flutter | Decide, nearby, today, water, weekly, onboarding, settings, auth |
 | D3 | Design | UX, accessibility and copy review of the finished app (the web shell and icons arrive in F1) |

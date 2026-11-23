@@ -1,11 +1,21 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:timezone/data/latest_all.dart' as timezone;
 
 import 'app/app.dart';
+import 'app/composition.dart';
+import 'app/startup_error_app.dart';
+import 'core/config/app_config.dart';
 
-/// Composition root. Later steps select the demo or live repositories here and
-/// pass them to the feature providers through [ProviderScope] overrides.
+/// Composition root. [composeOverrides] chooses the demo or live
+/// implementations, and this file only starts the app with them.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const ProviderScope(child: PlateWiseApp()));
+  timezone.initializeTimeZones();
+  try {
+    final overrides = await composeOverrides(const AppConfig());
+    runApp(ProviderScope(overrides: overrides, child: const PlateWiseApp()));
+  } on StartupException catch (error) {
+    runApp(StartupErrorApp(error.message));
+  }
 }
