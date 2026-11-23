@@ -24,6 +24,8 @@ import '../features/comparison/data/live_comparison_repository.dart';
 import '../features/meal_logging/data/demo_meal_log_repository.dart';
 import '../features/nearby/data/geolocator_location_service.dart';
 import '../features/today/data/today_providers.dart';
+import '../features/water/data/water_providers.dart';
+import '../features/water/data/water_repositories.dart';
 import '../features/today/data/today_repositories.dart';
 import '../features/nearby/data/nearby_providers.dart';
 import '../features/nearby/data/nearby_repositories.dart';
@@ -88,6 +90,7 @@ Future<List<Override>> composeOverrides(
         ),
       ),
       todayRepositoryProvider.overrideWithValue(DemoTodayRepository(store)),
+      waterRepositoryProvider.overrideWithValue(DemoWaterRepository(store)),
       ..._nearbyServices(),
     ];
   }
@@ -141,6 +144,7 @@ Future<List<Override>> composeOverrides(
     ),
     nearbyRepositoryProvider.overrideWithValue(LiveNearbyRepository(api)),
     todayRepositoryProvider.overrideWithValue(LiveTodayRepository(api)),
+    waterRepositoryProvider.overrideWithValue(LiveWaterRepository(api)),
     ..._nearbyServices(),
   ];
 }

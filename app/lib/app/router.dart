@@ -10,6 +10,8 @@ import '../features/meal_logging/presentation/capture_screen.dart';
 import '../features/meal_logging/presentation/review_screen.dart';
 import '../features/nearby/presentation/nearby_screen.dart';
 import '../features/today/presentation/today_screen.dart';
+import '../features/water/presentation/water_quick_add.dart';
+import '../features/water/presentation/water_screen.dart';
 import 'gate.dart';
 import 'placeholder_screen.dart';
 import 'shell.dart';
@@ -29,7 +31,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state, child) =>
             AppShell(path: state.uri.path, child: child),
         routes: [
-          GoRoute(path: Routes.today, builder: (_, _) => const TodayScreen()),
+          GoRoute(
+            path: Routes.today,
+            builder: (_, _) => TodayScreen(
+              waterQuickAdd: (log, goal) =>
+                  WaterQuickAdd(log, goal, compact: true),
+            ),
+          ),
           GoRoute(path: Routes.decide, builder: (_, _) => const DecideScreen()),
           GoRoute(path: Routes.nearby, builder: (_, _) => const NearbyScreen()),
           GoRoute(
@@ -50,6 +58,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: Routes.review,
         redirect: (_, state) => state.extra is ReviewArgs ? null : Routes.today,
         builder: (_, state) => ReviewScreen(state.extra! as ReviewArgs),
+      ),
+      GoRoute(path: Routes.water, builder: (_, _) => const WaterScreen()),
+      GoRoute(
+        path: Routes.profile,
+        builder: (_, _) => const PlaceholderScreen('Profile'),
       ),
       GoRoute(
         path: Routes.settings,
