@@ -1,0 +1,7 @@
+{
+  "PLATEWISE_MODE": "live",
+  "SUPABASE_URL": "https://replace-with-project.supabase.co",
+  "SUPABASE_PUBLISHABLE_KEY": "replace_with_publishable_key",
+  "PLATEWISE_LOCAL_DEV": false,
+  "PLATEWISE_OSM_TILES": false
+}

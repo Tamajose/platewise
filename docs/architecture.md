@@ -17,24 +17,47 @@ The Dart models, Deno schemas and SQL migrations share one API contract. A contr
 
 ```
 app/lib/
-  core/                 # config, failure types, networking client, shared utilities
+  main.dart             # composition root: picks demo or live, sets provider overrides
+  app/                  # application shell: MaterialApp, go_router configuration
+  core/
+    domain/             # entities and Failure types shared by two or more features
+    theme/, widgets/    # design system (owned by Design)
+    config/             # build-time configuration
   features/<feature>/
-    domain/             # entities, repository interfaces, use cases (pure Dart)
-    data/               # DTOs, mappers, data sources, repository implementations
-    presentation/       # screens, widgets, Riverpod controllers
+    domain/             # entities, repository and service interfaces, use cases (pure Dart)
+    data/               # DTOs, mappers, data sources, repository implementations, providers
+    presentation/       # screens, widgets, Riverpod controllers and their providers
 ```
 
-**Dependency rule.** `presentation` depends on `domain`. `data` depends on `domain`. `domain` depends on neither, and imports no Flutter, Supabase or platform packages. An architecture test enforces this.
+### Rules
 
-**State management.** Riverpod. Screen state lives in `Notifier` and `AsyncNotifier` controllers that call use cases. Widgets render state and forward user actions.
+**1. Dependency rule.** `presentation` depends on `domain`. `data` depends on `domain`. `domain` depends on neither, and imports no Flutter, Supabase or platform packages. Features never import each other. Only `main.dart` and `app/` may import several features. An architecture test enforces these rules.
 
-**Demo and live modes.** Demo and live behaviour are two implementations of the same repository interfaces. `main.dart` is the composition root and selects one at startup through `ProviderScope` overrides.
+**2. Shared entities.** A type starts in the `domain/` of the feature that owns it. It moves to `core/domain/` only when a second feature needs it.
 
-**Errors.** The domain defines a `Failure` type. Data sources translate transport and provider errors into failures, and the presentation layer maps failures to messages.
+**3. Providers.** `domain/` contains no Riverpod. Repository providers live in `data/` and throw by default. `main.dart` overrides them with the live or demo implementation. Controllers and their providers live in `presentation/`. Demo and live behaviour are two implementations of the same interfaces.
+
+**4. App-level concerns.** A `session` feature owns bootstrap, capabilities and the demo or live mode. Meal photo upload belongs to meal logging, behind a media storage interface. Accounts belong to the auth feature.
+
+**5. Use cases.** A use case exists only for real, testable logic: ranking and budget fit, weekly aggregation, distance, energy estimation and validation. A controller calls a repository directly for plain reads and writes. This is a deliberate, pragmatic deviation from strict clean architecture, so a use case that only forwards one repository call is not added.
+
+**6. Routing.** `go_router` is configured in `app/`. Routes reference screens only. `app/` is the one layer allowed to import every feature's presentation.
+
+**7. Platform services.** Camera, microphone and location sit behind an interface in the feature's `domain/`. The implementation lives in that feature's `data/`, and tests use fakes.
+
+**8. State.** Riverpod. Screen state lives in `Notifier` and `AsyncNotifier` controllers. Widgets render state and forward user actions.
+
+**9. Errors.** The domain defines `Failure` types. Data sources translate transport and provider errors into failures. The presentation layer maps failures to messages.
 
 ## Backend
 
-The Edge Function stays thin: handler, then validation, then pure domain logic, then provider adapters behind interfaces. Contracts are versioned (API v1).
+The target is a thin handler (the application layer) that validates a request, calls pure domain logic, and reaches infrastructure through interfaces:
+
+- **Domain:** pure logic such as ranking, progress, redaction and contracts, with no network or database access.
+- **Infrastructure:** the Supabase client, RPC calls, storage and caching.
+- **Providers:** the AI adapters behind interfaces.
+
+The migrated code does not yet follow this. For example, `decision.ts` imports `http.ts`, and `http.ts` mixes client creation, RPC calls, caching and image handling. Step B6 restructures it, with the existing tests as the safety net and an import-scanning test to enforce the layering. Contracts are versioned (API v1).
 
 ## Migration plan
 
@@ -48,12 +71,13 @@ Each step is one branch and one pull request.
 | B3 | Backend | Decision logic and audio handling |
 | B4 | Backend | Edge Function handler, integration tests and environment example |
 | B5 | Backend | Evaluation and API smoke tooling, seed generator, fixtures, and the API, evaluation and deployment docs |
-| F1 | Flutter | App scaffold |
+| F1 | Flutter | App scaffold: platform folders, web shell and icons, dependencies, strict analysis, placeholder app, CI job, architecture rules, menu seed asset |
 | D1 | Design | Theme, tokens, fonts and design-system docs |
 | D2 | Design | Shared component library |
 | F2 | Flutter | Domain core |
-| F3 | Flutter | Data core and composition root |
+| F3 | Flutter | Data core, the `session` feature and the composition root |
 | F4 | Flutter | Meal logging (the reference slice) |
 | F5–F12 | Flutter | Decide, nearby, today, water, weekly, onboarding, settings, auth |
-| D3 | Design | Web assets and UX pass |
+| D3 | Design | UX, accessibility and copy review of the finished app (the web shell and icons arrive in F1) |
+| B6 | Backend | Restructure the Edge Function into domain, infrastructure, providers and handler layers, with an import-scanning test |
 | W1 | Shared | Final docs, web demo launcher, Playwright browser checks and verification |
