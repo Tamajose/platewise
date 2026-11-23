@@ -34,3 +34,4 @@ supabase/.branches/
 supabase/.temp/
 testdata/browser-evidence/
 *.iml
+g.sh
