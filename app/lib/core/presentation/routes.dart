@@ -13,4 +13,6 @@ abstract final class Routes {
   static const settings = '/settings';
   static const water = '/water';
   static const profile = '/profile';
+  static const account = '/account';
+  static const signIn = '/account?mode=signin';
 }

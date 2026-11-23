@@ -116,7 +116,8 @@ Each step is one branch and one pull request.
 | F7 | Flutter | Today: daily log, calorie summary, delete a meal, photo cleanup retry. The application shell (gate, navigation, day rollover check) and the real router replace the temporary start page. Welcome, Progress and Settings are placeholders until their steps |
 | F8 | Flutter | Water: quick add with undo on Today (supplied by `app/` through a builder), the water log, edit and remove. Retrying an add reuses its id so it cannot count twice |
 | F9 | Flutter | Weekly progress: seven-day chart, coverage and averages, nutrient totals, and the weekly summary (AI in live mode, calculated facts in demo). `NutrientBreakdown` moves to the shared widgets because meal review and progress both use it |
-| F10–F12 | Flutter | Onboarding, settings, auth |
+| F10 | Flutter | Onboarding and profile: the welcome screen, the demo sample day, and the profile form with its validation rules. The profile feature also serves the edit screen at `/profile`. The welcome screen receives the form through a builder supplied by `app/` |
+| F11–F12 | Flutter | Settings, auth |
 | D3 | Design | UX, accessibility and copy review of the finished app (the web shell and icons arrive in F1) |
 | B6 | Backend | Restructure the Edge Function into domain, infrastructure, providers and handler layers, with an import-scanning test |
 | W1 | Shared | Final docs, web demo launcher, Playwright browser checks and verification |
