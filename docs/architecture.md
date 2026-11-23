@@ -44,9 +44,9 @@ Each step is one branch and one pull request.
 |---|---|---|
 | P0 | Shared | Repository foundation |
 | B1 | Backend | Database: migrations, seed and SQL tests |
-| B2 | Backend | Shared contracts, HTTP and privacy modules |
-| B3 | Backend | Decision and progress logic |
-| B4 | Backend | AI providers and the Edge Function handler |
+| B2 | Backend | Contracts, AI providers, HTTP, privacy and progress modules |
+| B3 | Backend | Decision logic and audio handling |
+| B4 | Backend | Edge Function handler, integration tests and environment example |
 | B5 | Backend | Tooling, test data and API docs |
 | F1 | Flutter | App scaffold |
 | D1 | Design | Theme, tokens, fonts and design-system docs |
