@@ -92,6 +92,39 @@ void main() {
       );
     });
 
+    test('shared code may not depend on a feature', () {
+      for (final from in [
+        'core/data/x.dart',
+        'core/presentation/x.dart',
+        'core/widgets/x.dart',
+        'core/domain/x.dart',
+      ]) {
+        expect(
+          violations(from, ['../../features/meals/domain/y.dart']),
+          isNotEmpty,
+          reason: from,
+        );
+      }
+    });
+
+    test('shared data and presentation follow the same layer rules', () {
+      expect(
+        violations('core/data/x.dart', ['../presentation/y.dart']),
+        isNotEmpty,
+      );
+      expect(
+        violations('core/presentation/x.dart', ['../data/api/api_client.dart']),
+        isNotEmpty,
+      );
+      expect(
+        violations('core/presentation/x.dart', [
+          '../data/core_providers.dart',
+          '../domain/domain.dart',
+        ]),
+        isEmpty,
+      );
+    });
+
     test('the shell may import any feature', () {
       expect(
         violations('app/router.dart', [

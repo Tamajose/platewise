@@ -35,8 +35,13 @@ Position positionOf(String libPath) {
     };
     return Position(layer, parts[1]);
   }
-  if (parts.length >= 3 && parts[0] == 'core' && parts[1] == 'domain') {
-    return const Position(Layer.domain, null);
+  if (parts.length >= 3 && parts[0] == 'core') {
+    return switch (parts[1]) {
+      'domain' => const Position(Layer.domain, null),
+      'data' => const Position(Layer.data, null),
+      'presentation' => const Position(Layer.presentation, null),
+      _ => const Position(Layer.other, null),
+    };
   }
   return const Position(Layer.other, null);
 }
@@ -62,6 +67,13 @@ List<String> violations(String libPath, List<String> imports) {
   for (final import in imports) {
     final target = resolveProjectImport(libPath, import);
     final targetPosition = target == null ? null : positionOf(target);
+
+    // Shared code never depends on a feature.
+    if (libPath.startsWith('core/') &&
+        target != null &&
+        target.startsWith('features/')) {
+      problems.add('core file $libPath imports a feature: $import');
+    }
 
     // Features never import each other.
     if (targetPosition != null &&
