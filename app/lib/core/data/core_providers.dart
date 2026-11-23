@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../domain/media_storage.dart';
 import '../domain/overview_repository.dart';
@@ -28,3 +29,9 @@ final photoPickerProvider = Provider<PhotoPicker>(
 
 /// Tests override this to get predictable identifiers.
 final idGeneratorProvider = Provider<IdGenerator>((ref) => newId);
+
+/// Opens a link in the browser or another app. Returns whether it opened.
+/// Tests override this.
+final urlOpenerProvider = Provider<Future<bool> Function(Uri)>(
+  (ref) => launchUrl,
+);

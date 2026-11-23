@@ -7,4 +7,5 @@ abstract final class Routes {
   static const decide = '/decide';
   static const menuReview = '/menu-review';
   static const today = '/today';
+  static const nearby = '/nearby';
 }

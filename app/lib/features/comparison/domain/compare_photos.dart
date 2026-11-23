@@ -14,15 +14,6 @@ const maxMealBudget = 5000;
 const budgetMessage =
     'Enter a meal budget from 1 to $maxMealBudget kcal, or leave it blank.';
 
-/// The calories left today, or null when there is no target or none is left.
-int? suggestedBudget(Overview? overview) {
-  final log = overview?.today;
-  final target = log?.target;
-  if (target == null || log == null) return null;
-  final remaining = target - log.representative;
-  return remaining > 0 ? remaining : null;
-}
-
 /// A meal budget from typed text. Blank means no budget. Throws a [Failure]
 /// for anything that is not a whole number from 1 to 5,000.
 int? parseMealBudget(String text) {
