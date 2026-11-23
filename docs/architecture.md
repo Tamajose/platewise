@@ -73,7 +73,7 @@ Each step is one branch and one pull request.
 | B5 | Backend | Evaluation and API smoke tooling, seed generator, fixtures, and the API, evaluation and deployment docs |
 | F1 | Flutter | App scaffold: platform folders, web shell and icons, dependencies, strict analysis, placeholder app, CI job, architecture rules, menu seed asset |
 | D1 | Design | Theme, tokens, fonts and design-system docs |
-| D2 | Design | Shared component library |
+| D2 | Design | Shared component library: `plate_widgets.dart` split into files by family, number formatting helper, widget tests. `ConfidenceBadge` is deferred to F2/F4 because it depends on the `Confidence` domain type |
 | F2 | Flutter | Domain core |
 | F3 | Flutter | Data core, the `session` feature and the composition root |
 | F4 | Flutter | Meal logging (the reference slice) |
