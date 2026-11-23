@@ -1,0 +1,7 @@
+# Local meal evaluation
+
+The fixture inventory has 24 descriptions. Six have source-backed kcal values from a small selection of Food Composition Table for Bangladesh rows. These are fixed-weight text problems using stated ingredient weights and public nutrient facts. Eighteen are illustrative local dishes, including a Bangla description and an ambiguous portion. They carry no ground truth. There are currently zero lab-measured or physically weighed photographs. [Food Composition Table for Bangladesh](https://www.fao.org/fileadmin/templates/food_composition/documents/FCT_10_2_14_final_version.pdf)
+
+Run the inventory with deno run --config supabase/functions/deno.json --allow-read=testdata --allow-env tools/evaluate.ts. The default performs zero provider requests and writes the available fixture counts. An operator with authorized HTTPS test credentials can set PLATEWISE_EVAL_LIVE=1 and the documented test variables. The runner evaluates the six reference cases, reports attempted and failed requests, MAE, signed error and interval coverage on successful comparable cases, and p50/p95 end-to-end HTTP text latency including failures. A pilot should record photo input readiness, upload start, estimate shown, validation failures and network/device conditions separately.
+
+The released inventory includes fixture counts and deterministic ranking and parsing test results. No live nutrition accuracy or photo-latency result was measured in this workspace.

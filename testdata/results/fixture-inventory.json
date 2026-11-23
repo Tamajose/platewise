@@ -1,0 +1,7 @@
+{
+  "state": "fixtures_ready",
+  "reference_cases": 6,
+  "illustrative_cases": 18,
+  "test_method": "Text HTTP request start through parsed response. Ready for externally authorized live verification.",
+  "provider_requests": 0
+}

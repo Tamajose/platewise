@@ -1,0 +1,32 @@
+{
+  "reference": "Shaheen et al., Food Composition Table for Bangladesh (2013), values per 100 g edible portion. Weights below are specified test inputs, not observations of served meals.",
+  "reference_url": "https://www.fao.org/fileadmin/templates/food_composition/documents/FCT_10_2_14_final_version.pdf",
+  "reference_cases": [
+    {"id":"br28-rice","description":"150 g plain cooked BR-28 rice, no salt or oil","components":[{"code":"01_0037","grams":150,"kcal_per_100g":109}]},
+    {"id":"boiled-masoor","description":"100 g cooked mashed masoor lentils with no extra cooking liquid, oil or salt","components":[{"code":"02_0015","grams":100,"kcal_per_100g":155}]},
+    {"id":"farm-egg","description":"50 g edible farmed chicken egg, boiled without salt, shell removed","components":[{"code":"11_0005","grams":50,"kcal_per_100g":158}]},
+    {"id":"boiled-diamond","description":"120 g plain boiled Diamond potatoes, without added salt or fat","components":[{"code":"05_0012","grams":120,"kcal_per_100g":67}]},
+    {"id":"sagar-banana","description":"100 g edible ripe raw Sagar banana, peel removed","components":[{"code":"08_0004","grams":100,"kcal_per_100g":95}]},
+    {"id":"rice-dal-egg","description":"150 g plain boiled BR-28 rice, 100 g boiled masoor lentils with no oil, and a 50 g boiled farmed chicken egg without the shell","components":[{"code":"01_0037","grams":150,"kcal_per_100g":109},{"code":"02_0015","grams":100,"kcal_per_100g":155},{"code":"11_0005","grams":50,"kcal_per_100g":158}]}
+  ],
+  "illustrative_cases": [
+    {"id":"khichuri","description":"One medium bowl of vegetable khichuri with a little mustard oil."},
+    {"id":"biryani","description":"One restaurant portion of chicken biryani, with one drumstick."},
+    {"id":"fish-curry","description":"One plate of rice and a medium piece of rui in fish curry."},
+    {"id":"bhorta","description":"One scoop of aloo bhorta with mustard oil and onions, and one cup cooked rice."},
+    {"id":"chana-roti","description":"One bowl of dry chana and a small whole wheat roti."},
+    {"id":"fuchka","description":"Six fuchka with potato and chickpea stuffing and tamarind water."},
+    {"id":"chotpoti","description":"Medium bowl of chotpoti with half a boiled egg."},
+    {"id":"jhalmuri","description":"One small paper cone of jhalmuri."},
+    {"id":"shingara","description":"Two small vegetable shingara."},
+    {"id":"pitha","description":"Two steamed bhapa pitha with coconut and date palm jaggery."},
+    {"id":"paratha","description":"Two canteen parathas with egg bhaji."},
+    {"id":"morog-polao","description":"Chicken polao, one plate with a medium piece of chicken."},
+    {"id":"shak","description":"One small bowl of stir-fried red amaranth and one cup rice."},
+    {"id":"firni","description":"Small bowl of rice firni."},
+    {"id":"doi","description":"Half a cup of sweet mishti doi."},
+    {"id":"cha","description":"One small cup of milk tea and two teaspoons of sugar."},
+    {"id":"bangla-rice","description":"এক কাপ ভাত, এক বাটি ডাল আর একটি সেদ্ধ ডিম","language":"bn"},
+    {"id":"ambiguous","description":"Some rice with a mixed curry from a canteen, portion unknown."}
+  ]
+}

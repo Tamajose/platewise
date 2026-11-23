@@ -47,7 +47,7 @@ Each step is one branch and one pull request.
 | B2 | Backend | Contracts, AI providers, HTTP, privacy and progress modules |
 | B3 | Backend | Decision logic and audio handling |
 | B4 | Backend | Edge Function handler, integration tests and environment example |
-| B5 | Backend | Tooling, test data and API docs |
+| B5 | Backend | Evaluation and API smoke tooling, seed generator, fixtures, and the API, evaluation and deployment docs |
 | F1 | Flutter | App scaffold |
 | D1 | Design | Theme, tokens, fonts and design-system docs |
 | D2 | Design | Shared component library |
@@ -56,4 +56,4 @@ Each step is one branch and one pull request.
 | F4 | Flutter | Meal logging (the reference slice) |
 | F5–F12 | Flutter | Decide, nearby, today, water, weekly, onboarding, settings, auth |
 | D3 | Design | Web assets and UX pass |
-| W1 | Shared | Final docs, launcher and verification |
+| W1 | Shared | Final docs, web demo launcher, Playwright browser checks and verification |
