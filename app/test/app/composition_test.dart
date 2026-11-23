@@ -7,6 +7,7 @@ import 'package:platewise/core/config/app_config.dart';
 import 'package:platewise/core/config/app_config_provider.dart';
 import 'package:platewise/core/data/core_providers.dart';
 import 'package:platewise/core/presentation/session_state.dart';
+import 'package:platewise/features/meal_logging/data/meal_log_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
@@ -116,7 +117,8 @@ void main() {
 
       expect(container.read(configProvider).demo, isFalse);
       expect(container.read(sessionRepositoryProvider).isDemo, isFalse);
-      expect(overrides, hasLength(3));
+      expect(container.read(mealLogRepositoryProvider).sampleDraft(), isNull);
+      expect(overrides, isNotEmpty);
     });
   });
 

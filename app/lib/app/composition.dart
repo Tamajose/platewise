@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart' show Ref;
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -8,10 +9,20 @@ import '../core/data/api/api_client.dart';
 import '../core/data/auth/auth_session.dart';
 import '../core/data/core_providers.dart';
 import '../core/data/demo/demo_store.dart';
+import '../core/data/media/demo_media_storage.dart';
+import '../core/data/media/image_picker_photo_picker.dart';
+import '../core/data/media/live_media_storage.dart';
 import '../core/data/overview/demo_overview_repository.dart';
 import '../core/data/overview/live_overview_repository.dart';
 import '../core/data/session/demo_session_repository.dart';
 import '../core/data/session/live_session_repository.dart';
+import '../features/meal_logging/data/demo_meal_log_repository.dart';
+import '../features/meal_logging/data/demo_speech_transcriber.dart';
+import '../features/meal_logging/data/live_meal_log_repository.dart';
+import '../features/meal_logging/data/live_speech_transcriber.dart';
+import '../features/meal_logging/data/meal_log_providers.dart';
+import '../features/meal_logging/data/record_voice_recorder.dart';
+import '../features/meal_logging/domain/voice.dart';
 
 /// The app cannot start. [message] is safe to show to a person.
 class StartupException implements Exception {
@@ -50,6 +61,13 @@ Future<List<Override>> composeOverrides(
       overviewRepositoryProvider.overrideWithValue(
         DemoOverviewRepository(store),
       ),
+      mediaStorageProvider.overrideWithValue(const DemoMediaStorage()),
+      photoPickerProvider.overrideWithValue(ImagePickerPhotoPicker()),
+      mealLogRepositoryProvider.overrideWithValue(DemoMealLogRepository(store)),
+      speechTranscriberProvider.overrideWithValue(
+        const DemoSpeechTranscriber(),
+      ),
+      voiceRecorderProvider.overrideWith(_deviceRecorder),
     ];
   }
   if (!config.canConnect) {
@@ -77,5 +95,32 @@ Future<List<Override>> composeOverrides(
       LiveSessionRepository(auth, api),
     ),
     overviewRepositoryProvider.overrideWithValue(LiveOverviewRepository(api)),
+    mediaStorageProvider.overrideWithValue(
+      LiveMediaStorage(
+        auth: auth,
+        api: api,
+        upload: (path, bytes) => client.storage
+            .from('meal-media')
+            .uploadBinary(
+              path,
+              bytes,
+              fileOptions: const FileOptions(
+                contentType: 'image/jpeg',
+                upsert: false,
+              ),
+            ),
+      ),
+    ),
+    photoPickerProvider.overrideWithValue(ImagePickerPhotoPicker()),
+    mealLogRepositoryProvider.overrideWithValue(LiveMealLogRepository(api)),
+    speechTranscriberProvider.overrideWithValue(LiveSpeechTranscriber(api)),
+    voiceRecorderProvider.overrideWith(_deviceRecorder),
   ];
+}
+
+/// One recorder per voice session, released when voice entry closes.
+VoiceRecorder _deviceRecorder(Ref ref) {
+  final recorder = RecordVoiceRecorder();
+  ref.onDispose(recorder.dispose);
+  return recorder;
 }

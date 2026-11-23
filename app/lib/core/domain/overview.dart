@@ -22,6 +22,26 @@ class Overview {
   final DateTime? localDay;
   final int pendingAssets;
   final bool deletionPending, deletionAccount, sampleHistory;
+
+  /// A copy with the given lists replaced. Everything else is kept, and the
+  /// profile cannot be cleared this way.
+  Overview copyWith({
+    Profile? profile,
+    List<SavedMeal>? meals,
+    List<TargetSnapshot>? targets,
+    List<WaterEntry>? water,
+  }) => Overview(
+    profile: profile ?? this.profile,
+    meals: meals ?? this.meals,
+    targets: targets ?? this.targets,
+    water: water ?? this.water,
+    localDay: localDay,
+    pendingAssets: pendingAssets,
+    deletionPending: deletionPending,
+    deletionAccount: deletionAccount,
+    sampleHistory: sampleHistory,
+  );
+
   String get zone => profile?.zone ?? 'Asia/Dhaka';
   DayLog forDay(DateTime date) {
     final key = dayKey(date);
