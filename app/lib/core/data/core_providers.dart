@@ -28,6 +28,13 @@ final photoPickerProvider = Provider<PhotoPicker>(
   (ref) => throw StateError('Photo picker initialization required'),
 );
 
+/// The signed-in user's ID each time it changes, null when signed out. Demo
+/// mode has no sessions, so the default never emits. The live composition
+/// overrides it with the auth service's change stream.
+final userChangesProvider = StreamProvider<String?>(
+  (ref) => const Stream.empty(),
+);
+
 /// Tests override this to get predictable identifiers.
 final idGeneratorProvider = Provider<IdGenerator>((ref) => newId);
 

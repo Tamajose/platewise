@@ -16,10 +16,7 @@ class AppGate extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(overviewProvider);
     if (state.hasValue && !state.isLoading && !state.hasError) {
-      final route = entryRoute(state.requireValue);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) context.go(route);
-      });
+      _goWhenSettled(context, entryRoute(state.requireValue));
     }
     return Scaffold(
       appBar: AppBar(title: const Wordmark()),
@@ -35,5 +32,27 @@ class AppGate extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  /// Redirects once this page has finished sliding in. Leaving earlier would
+  /// build the next screen while the previous one is still on its way out,
+  /// and two copies of the shell cannot exist at once.
+  void _goWhenSettled(BuildContext context, String route) {
+    final animation = ModalRoute.of(context)?.animation;
+    void go() {
+      if (context.mounted) context.go(route);
+    }
+
+    if (animation == null || animation.isCompleted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => go());
+      return;
+    }
+    void listener(AnimationStatus status) {
+      if (status != AnimationStatus.completed) return;
+      animation.removeStatusListener(listener);
+      go();
+    }
+
+    animation.addStatusListener(listener);
   }
 }

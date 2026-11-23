@@ -118,7 +118,7 @@ Each step is one branch and one pull request.
 | F9 | Flutter | Weekly progress: seven-day chart, coverage and averages, nutrient totals, and the weekly summary (AI in live mode, calculated facts in demo). `NutrientBreakdown` moves to the shared widgets because meal review and progress both use it |
 | F10 | Flutter | Onboarding and profile: the welcome screen, the demo sample day, and the profile form with its validation rules. The profile feature also serves the edit screen at `/profile`. The welcome screen receives the form through a builder supplied by `app/` |
 | F11 | Flutter | Settings: profile summary, privacy and consent, data and account deletion, the energy estimate, shared corrections and credits. `ProfileRepository` moves to the core because profile editing and the energy estimate both save the profile |
-| F12 | Flutter | Auth |
+| F12 | Flutter | Accounts: keep a guest log by linking a verified email and password, sign in, sign out, and the app-level reset when the signed-in person changes. The last Flutter step: no placeholder screens remain. The entry gate now waits for its own transition before redirecting |
 | D3 | Design | UX, accessibility and copy review of the finished app (the web shell and icons arrive in F1) |
 | B6 | Backend | Restructure the Edge Function into domain, infrastructure, providers and handler layers, with an import-scanning test |
 | W1 | Shared | Final docs, web demo launcher, Playwright browser checks and verification |
