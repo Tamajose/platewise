@@ -1,0 +1,18 @@
+# Review routing by role.
+# TODO: replace the placeholders with the real GitHub usernames, then remove the leading "#" on each rule.
+# Rules below the first match win, so the broad rules come first.
+#
+# Flutter:        Tanvir Mahmud Hossain  -> @FLUTTER_USERNAME
+# AI and backend: Juhan Ahmed            -> @BACKEND_USERNAME
+# Design and UX:  Mahdeen Mannaf         -> @DESIGN_USERNAME
+
+# /app/                           @FLUTTER_USERNAME
+# /supabase/                      @BACKEND_USERNAME
+# /tools/                         @BACKEND_USERNAME
+# /testdata/                      @BACKEND_USERNAME
+# /app/lib/core/theme/            @DESIGN_USERNAME
+# /app/lib/core/widgets/          @DESIGN_USERNAME
+# /app/assets/                    @DESIGN_USERNAME
+# /app/web/                       @DESIGN_USERNAME
+# /docs/design-system.md          @DESIGN_USERNAME
+# /.agents/                       @DESIGN_USERNAME

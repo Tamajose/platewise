@@ -1,0 +1,36 @@
+# Local environment and signing files
+.env
+.env.*
+!.env.example
+.envrc
+app/config/*.local.json
+local.properties
+key.properties
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+*.mobileprovision
+
+# Dependencies and build output
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.gradle/
+node_modules/
+__pycache__/
+build/
+coverage/
+*.apk
+*.aab
+*.ipa
+
+# Local tooling and test output
+.idea/
+.DS_Store
+supabase/.branches/
+supabase/.temp/
+testdata/browser-evidence/
+*.iml
