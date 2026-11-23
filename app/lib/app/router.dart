@@ -9,6 +9,9 @@ import '../features/comparison/presentation/menu_review_screen.dart';
 import '../features/meal_logging/presentation/capture_screen.dart';
 import '../features/meal_logging/presentation/review_screen.dart';
 import '../features/nearby/presentation/nearby_screen.dart';
+import '../features/onboarding/presentation/welcome_screen.dart';
+import '../features/profile/presentation/profile_form.dart';
+import '../features/profile/presentation/profile_screen.dart';
 import '../features/today/presentation/today_screen.dart';
 import '../features/water/presentation/water_quick_add.dart';
 import '../features/weekly/presentation/progress_screen.dart';
@@ -26,7 +29,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: Routes.home, builder: (_, _) => const AppGate()),
       GoRoute(
         path: Routes.welcome,
-        builder: (_, _) => const PlaceholderScreen('Welcome'),
+        builder: (_, _) => WelcomeScreen(
+          profileForm: (onSaved) => ProfileForm(onSaved: onSaved),
+        ),
       ),
       ShellRoute(
         builder: (_, state, child) =>
@@ -60,9 +65,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => ReviewScreen(state.extra! as ReviewArgs),
       ),
       GoRoute(path: Routes.water, builder: (_, _) => const WaterScreen()),
+      GoRoute(path: Routes.profile, builder: (_, _) => const ProfileScreen()),
       GoRoute(
-        path: Routes.profile,
-        builder: (_, _) => const PlaceholderScreen('Profile'),
+        path: Routes.account,
+        builder: (_, _) => const PlaceholderScreen('Account'),
       ),
       GoRoute(
         path: Routes.settings,

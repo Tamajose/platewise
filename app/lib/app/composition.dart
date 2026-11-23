@@ -23,6 +23,10 @@ import '../features/comparison/data/demo_comparison_repository.dart';
 import '../features/comparison/data/live_comparison_repository.dart';
 import '../features/meal_logging/data/demo_meal_log_repository.dart';
 import '../features/nearby/data/geolocator_location_service.dart';
+import '../features/onboarding/data/onboarding_providers.dart';
+import '../features/onboarding/data/onboarding_repositories.dart';
+import '../features/profile/data/profile_providers.dart';
+import '../features/profile/data/profile_repositories.dart';
 import '../features/today/data/today_providers.dart';
 import '../features/water/data/water_providers.dart';
 import '../features/weekly/data/weekly_providers.dart';
@@ -94,6 +98,10 @@ Future<List<Override>> composeOverrides(
       todayRepositoryProvider.overrideWithValue(DemoTodayRepository(store)),
       waterRepositoryProvider.overrideWithValue(DemoWaterRepository(store)),
       weeklyRepositoryProvider.overrideWithValue(DemoWeeklyRepository(store)),
+      profileRepositoryProvider.overrideWithValue(DemoProfileRepository(store)),
+      onboardingRepositoryProvider.overrideWithValue(
+        DemoOnboardingRepository(store),
+      ),
       ..._nearbyServices(),
     ];
   }
@@ -149,6 +157,10 @@ Future<List<Override>> composeOverrides(
     todayRepositoryProvider.overrideWithValue(LiveTodayRepository(api)),
     waterRepositoryProvider.overrideWithValue(LiveWaterRepository(api)),
     weeklyRepositoryProvider.overrideWithValue(LiveWeeklyRepository(api)),
+    profileRepositoryProvider.overrideWithValue(LiveProfileRepository(api)),
+    onboardingRepositoryProvider.overrideWithValue(
+      const LiveOnboardingRepository(),
+    ),
     ..._nearbyServices(),
   ];
 }

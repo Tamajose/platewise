@@ -6,6 +6,8 @@ import 'package:platewise/app/entry_route.dart';
 import 'package:platewise/core/data/demo/demo_store.dart';
 import 'package:platewise/core/domain/domain.dart';
 import 'package:platewise/core/presentation/routes.dart';
+import 'package:platewise/features/onboarding/data/onboarding_providers.dart';
+import 'package:platewise/features/onboarding/data/onboarding_repositories.dart';
 import 'package:platewise/features/today/data/today_providers.dart';
 import 'package:platewise/features/today/data/today_repositories.dart';
 import 'package:platewise/features/today/domain/today_repository.dart';
@@ -101,6 +103,9 @@ void main() {
           overrides: [
             ...rig.overrides,
             todayRepositoryProvider.overrideWithValue(today),
+            onboardingRepositoryProvider.overrideWithValue(
+              const LiveOnboardingRepository(),
+            ),
           ],
           child: const PlateWiseApp(),
         ),
@@ -157,6 +162,9 @@ void main() {
           overrides: [
             ...rig.overrides,
             todayRepositoryProvider.overrideWithValue(today),
+            onboardingRepositoryProvider.overrideWithValue(
+              const LiveOnboardingRepository(),
+            ),
           ],
           child: const PlateWiseApp(),
         ),
@@ -204,7 +212,7 @@ void main() {
       tester,
     ) async {
       await show(tester, overview(profile: false));
-      expect(find.text('Welcome'), findsWidgets);
+      expect(find.text('Decide before you eat'), findsOneWidget);
     });
 
     testWidgets('a wide window uses the side rail', (tester) async {
@@ -223,6 +231,9 @@ void main() {
           overrides: [
             ...rig.overrides,
             todayRepositoryProvider.overrideWithValue(FakeToday()),
+            onboardingRepositoryProvider.overrideWithValue(
+              const LiveOnboardingRepository(),
+            ),
           ],
           child: const PlateWiseApp(),
         ),
@@ -232,7 +243,7 @@ void main() {
       rig.overviews.error = null;
       await tester.tap(find.text('Try again'));
       await tester.pumpAndSettle();
-      expect(find.text('Welcome'), findsWidgets);
+      expect(find.text('Decide before you eat'), findsOneWidget);
     });
   });
 }
