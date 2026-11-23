@@ -23,6 +23,8 @@ import '../features/comparison/data/demo_comparison_repository.dart';
 import '../features/comparison/data/live_comparison_repository.dart';
 import '../features/meal_logging/data/demo_meal_log_repository.dart';
 import '../features/nearby/data/geolocator_location_service.dart';
+import '../features/today/data/today_providers.dart';
+import '../features/today/data/today_repositories.dart';
 import '../features/nearby/data/nearby_providers.dart';
 import '../features/nearby/data/nearby_repositories.dart';
 import '../features/nearby/data/overpass_restaurant_search.dart';
@@ -85,6 +87,7 @@ Future<List<Override>> composeOverrides(
           () => rootBundle.loadString('assets/data/seeded_menus.json'),
         ),
       ),
+      todayRepositoryProvider.overrideWithValue(DemoTodayRepository(store)),
       ..._nearbyServices(),
     ];
   }
@@ -137,6 +140,7 @@ Future<List<Override>> composeOverrides(
       LiveComparisonRepository(api),
     ),
     nearbyRepositoryProvider.overrideWithValue(LiveNearbyRepository(api)),
+    todayRepositoryProvider.overrideWithValue(LiveTodayRepository(api)),
     ..._nearbyServices(),
   ];
 }

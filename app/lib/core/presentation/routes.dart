@@ -8,4 +8,7 @@ abstract final class Routes {
   static const menuReview = '/menu-review';
   static const today = '/today';
   static const nearby = '/nearby';
+  static const progress = '/progress';
+  static const welcome = '/welcome';
+  static const settings = '/settings';
 }
