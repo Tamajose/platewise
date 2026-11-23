@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../core/presentation/review_args.dart';
 import '../core/presentation/routes.dart';
+import '../features/auth/presentation/account_screen.dart';
 import '../features/comparison/presentation/decide_screen.dart';
 import '../features/comparison/presentation/menu_review_args.dart';
 import '../features/comparison/presentation/menu_review_screen.dart';
@@ -21,7 +22,6 @@ import '../features/water/presentation/water_quick_add.dart';
 import '../features/weekly/presentation/progress_screen.dart';
 import '../features/water/presentation/water_screen.dart';
 import 'gate.dart';
-import 'placeholder_screen.dart';
 import 'shell.dart';
 
 /// Maps each route path to a screen. Screens navigate by path, so this is the
@@ -78,7 +78,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: Routes.account,
-        builder: (_, _) => const PlaceholderScreen('Account'),
+        builder: (_, state) => AccountScreen(
+          initialSignIn: state.uri.queryParameters['mode'] == 'signin',
+        ),
       ),
       GoRoute(path: Routes.settings, builder: (_, _) => const SettingsScreen()),
     ],

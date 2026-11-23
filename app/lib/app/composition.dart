@@ -19,6 +19,9 @@ import '../core/data/overview/demo_overview_repository.dart';
 import '../core/data/overview/live_overview_repository.dart';
 import '../core/data/session/demo_session_repository.dart';
 import '../core/data/session/live_session_repository.dart';
+import '../features/auth/data/account_providers.dart';
+import '../features/auth/data/account_repositories.dart';
+import '../features/auth/data/auth_backend.dart';
 import '../features/comparison/data/comparison_providers.dart';
 import '../features/comparison/data/demo_comparison_repository.dart';
 import '../features/comparison/data/live_comparison_repository.dart';
@@ -91,6 +94,9 @@ Future<List<Override>> composeOverrides(
       comparisonRepositoryProvider.overrideWithValue(
         DemoComparisonRepository(),
       ),
+      accountRepositoryProvider.overrideWithValue(
+        const DemoAccountRepository(),
+      ),
       nearbyRepositoryProvider.overrideWithValue(
         DemoNearbyRepository(
           () => rootBundle.loadString('assets/data/seeded_menus.json'),
@@ -158,6 +164,14 @@ Future<List<Override>> composeOverrides(
       LiveComparisonRepository(api),
     ),
     nearbyRepositoryProvider.overrideWithValue(LiveNearbyRepository(api)),
+    accountRepositoryProvider.overrideWithValue(
+      LiveAccountRepository(SupabaseAuthBackend(auth)),
+    ),
+    userChangesProvider.overrideWith(
+      (ref) => client.auth.onAuthStateChange.map(
+        (change) => change.session?.user.id,
+      ),
+    ),
     todayRepositoryProvider.overrideWithValue(LiveTodayRepository(api)),
     waterRepositoryProvider.overrideWithValue(LiveWaterRepository(api)),
     weeklyRepositoryProvider.overrideWithValue(LiveWeeklyRepository(api)),
