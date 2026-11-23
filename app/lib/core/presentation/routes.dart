@@ -11,4 +11,6 @@ abstract final class Routes {
   static const progress = '/progress';
   static const welcome = '/welcome';
   static const settings = '/settings';
+  static const water = '/water';
+  static const profile = '/profile';
 }

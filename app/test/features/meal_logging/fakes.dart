@@ -41,10 +41,14 @@ class FakeOverview implements OverviewRepository {
   Overview value;
   int reads = 0;
   Object? error;
+
+  /// When set, answers from here instead of [value].
+  Future<Overview> Function()? source;
   @override
   Future<Overview> overview() async {
     reads++;
     if (error != null) throw error!;
+    if (source != null) return source!();
     return value;
   }
 }
