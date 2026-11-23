@@ -197,10 +197,7 @@ void main() {
       expect(find.text('Choose a search area'), findsOneWidget);
       await tester.tap(find.text('Progress'));
       await tester.pumpAndSettle();
-      expect(
-        find.text('This screen is added in a later step.'),
-        findsOneWidget,
-      );
+      expect(find.text('Intake and target'), findsOneWidget);
     });
 
     testWidgets('a new person lands on the welcome placeholder', (

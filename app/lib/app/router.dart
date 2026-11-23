@@ -11,6 +11,7 @@ import '../features/meal_logging/presentation/review_screen.dart';
 import '../features/nearby/presentation/nearby_screen.dart';
 import '../features/today/presentation/today_screen.dart';
 import '../features/water/presentation/water_quick_add.dart';
+import '../features/weekly/presentation/progress_screen.dart';
 import '../features/water/presentation/water_screen.dart';
 import 'gate.dart';
 import 'placeholder_screen.dart';
@@ -42,8 +43,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: Routes.nearby, builder: (_, _) => const NearbyScreen()),
           GoRoute(
             path: Routes.progress,
-            builder: (_, _) =>
-                const PlaceholderScreen('Progress', standalone: false),
+            builder: (_, _) => const ProgressScreen(),
           ),
         ],
       ),

@@ -11,4 +11,5 @@ export 'headings.dart';
 export 'indicators.dart';
 export 'layout.dart';
 export 'media.dart';
+export 'nutrient_breakdown.dart';
 export 'states.dart';
