@@ -107,6 +107,7 @@ class _ProfileFormState extends ConsumerState<ProfileForm> {
           ),
           const SizedBox(height: 18),
           DropdownButtonFormField<String>(
+            isExpanded: true,
             initialValue: units,
             decoration: const InputDecoration(labelText: 'Measurement units'),
             items: const [
@@ -193,6 +194,7 @@ class _ProfileFormState extends ConsumerState<ProfileForm> {
           const SizedBox(height: 14),
           if (ref.watch(capabilitiesProvider).value?.banglaText == true) ...[
             DropdownButtonFormField<String>(
+              isExpanded: true,
               initialValue: language,
               decoration: const InputDecoration(
                 labelText: 'Preferred analysis language',
