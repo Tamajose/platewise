@@ -47,6 +47,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Watching the overview opens the private session in the background, so
+    // saving a profile works even right after the account was deleted.
+    ref.watch(overviewProvider);
     final demo = ref.watch(sessionRepositoryProvider).isDemo;
     final offersSample = ref
         .watch(onboardingRepositoryProvider)

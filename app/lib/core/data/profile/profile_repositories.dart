@@ -1,8 +1,7 @@
-import '../../../core/data/api/api_client.dart';
-import '../../../core/data/demo/demo_store.dart';
-import '../../../core/data/mappers/mappers.dart';
-import '../../../core/domain/domain.dart';
-import '../domain/profile_repository.dart';
+import '../../domain/domain.dart';
+import '../api/api_client.dart';
+import '../demo/demo_store.dart';
+import '../mappers/mappers.dart';
 
 class LiveProfileRepository implements ProfileRepository {
   LiveProfileRepository(this._api);

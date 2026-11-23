@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/presentation/failure_message.dart';
 import '../../../core/presentation/session_state.dart';
-import '../data/profile_providers.dart';
+import '../../../core/data/core_providers.dart';
 import '../domain/profile_rules.dart';
 
 /// Saves the profile form.

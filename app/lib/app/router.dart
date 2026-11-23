@@ -12,6 +12,10 @@ import '../features/nearby/presentation/nearby_screen.dart';
 import '../features/onboarding/presentation/welcome_screen.dart';
 import '../features/profile/presentation/profile_form.dart';
 import '../features/profile/presentation/profile_screen.dart';
+import '../features/settings/presentation/correction_screen.dart';
+import '../features/settings/presentation/credits_screen.dart';
+import '../features/settings/presentation/energy_screen.dart';
+import '../features/settings/presentation/settings_screen.dart';
 import '../features/today/presentation/today_screen.dart';
 import '../features/water/presentation/water_quick_add.dart';
 import '../features/weekly/presentation/progress_screen.dart';
@@ -66,14 +70,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: Routes.water, builder: (_, _) => const WaterScreen()),
       GoRoute(path: Routes.profile, builder: (_, _) => const ProfileScreen()),
+      GoRoute(path: Routes.energy, builder: (_, _) => const EnergyScreen()),
+      GoRoute(path: Routes.credits, builder: (_, _) => const CreditsScreen()),
+      GoRoute(
+        path: Routes.correction,
+        builder: (_, _) => const CorrectionScreen(),
+      ),
       GoRoute(
         path: Routes.account,
         builder: (_, _) => const PlaceholderScreen('Account'),
       ),
-      GoRoute(
-        path: Routes.settings,
-        builder: (_, _) => const PlaceholderScreen('Settings'),
-      ),
+      GoRoute(path: Routes.settings, builder: (_, _) => const SettingsScreen()),
     ],
   );
   ref.onDispose(router.dispose);

@@ -16,6 +16,20 @@ class Profile {
   final int waterGoal;
   final String zone, units, language;
   final bool correctionConsent;
+
+  /// A copy with the given fields replaced. The target can be replaced but
+  /// not cleared this way.
+  Profile copyWith({int? target, bool? correctionConsent}) => Profile(
+    height: height,
+    weight: weight,
+    target: target ?? this.target,
+    waterGoal: waterGoal,
+    zone: zone,
+    units: units,
+    language: language,
+    correctionConsent: correctionConsent ?? this.correctionConsent,
+  );
+
   double get bmi => weight / math.pow(height / 100, 2);
   double get displayHeight => units == 'us' ? height / 2.54 : height;
   double get displayWeight => units == 'us' ? weight / 0.45359237 : weight;
