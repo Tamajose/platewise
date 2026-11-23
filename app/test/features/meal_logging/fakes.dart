@@ -40,9 +40,11 @@ class FakeOverview implements OverviewRepository {
   FakeOverview([this.value = const Overview()]);
   Overview value;
   int reads = 0;
+  Object? error;
   @override
   Future<Overview> overview() async {
     reads++;
+    if (error != null) throw error!;
     return value;
   }
 }

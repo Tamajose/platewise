@@ -113,7 +113,8 @@ Each step is one branch and one pull request.
 | F4 | Flutter | Meal logging (the reference slice): capture by photo, text or voice, review and edit, save. Adds the photo picker and media storage to the core, `ConfidenceBadge`, the router, and a temporary start screen for trying it |
 | F5 | Flutter | Decide: compare menu dishes or two or three photos against a budget, menu review, and the `ComparePhotos` use case |
 | F6 | Flutter | Nearby: restaurant search (OpenStreetMap), device location, map, and demo sample menus. `compareFit`, `suggestedBudget` and `BudgetFitBadge` move to the core because comparison and nearby both use them |
-| F7–F12 | Flutter | Today, water, weekly, onboarding, settings, auth |
+| F7 | Flutter | Today: daily log, calorie summary, delete a meal, photo cleanup retry. The application shell (gate, navigation, day rollover check) and the real router replace the temporary start page. Welcome, Progress and Settings are placeholders until their steps |
+| F8–F12 | Flutter | Water, weekly, onboarding, settings, auth |
 | D3 | Design | UX, accessibility and copy review of the finished app (the web shell and icons arrive in F1) |
 | B6 | Backend | Restructure the Edge Function into domain, infrastructure, providers and handler layers, with an import-scanning test |
 | W1 | Shared | Final docs, web demo launcher, Playwright browser checks and verification |
