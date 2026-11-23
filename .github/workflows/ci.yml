@@ -1,0 +1,18 @@
+name: PlateWise checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  # Placeholder so the workflow is valid while the repository is assembled.
+  # Real jobs are added by the steps that introduce their code:
+  #   backend (B1, B2), app (F1).
+  foundation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - run: echo "Repository foundation in place."
