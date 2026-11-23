@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import '../../domain/failure.dart';
 import '../json.dart';
@@ -46,19 +48,65 @@ class ApiClient {
           .timeout(timeout);
       return parseResponse(response);
     } on TimeoutException {
-      throw const Failure(
-        'The request took longer than expected. Try again or enter the meal manually.',
-        code: 'TIMEOUT',
-        retryable: true,
-      );
+      throw _defaultTimeout;
     } on http.ClientException {
-      throw const Failure(
-        'You appear to be offline. Reconnect to sync or edit your draft.',
-        code: 'OFFLINE',
-        retryable: true,
-      );
+      throw _defaultOffline;
     }
   }
+
+  /// Calls an action that carries a file, such as a voice note. Form fields
+  /// travel beside the file instead of inside `input`.
+  ///
+  /// [timedOut] and [offline] replace the default messages, because what to do
+  /// next depends on the action.
+  Future<Json> callWithFile(
+    String action, {
+    required Map<String, String> fields,
+    required String fileField,
+    required Uint8List bytes,
+    required String filename,
+    required String contentType,
+    Failure? timedOut,
+    Failure? offline,
+  }) async {
+    final token = await _bearer();
+    final request = http.MultipartRequest('POST', endpoint)
+      ..headers.addAll({
+        'Authorization': 'Bearer $token',
+        'apikey': publishableKey,
+      })
+      ..fields.addAll({'version': '1', 'action': action, ...fields})
+      ..files.add(
+        http.MultipartFile.fromBytes(
+          fileField,
+          bytes,
+          filename: filename,
+          contentType: MediaType.parse(contentType),
+        ),
+      );
+    try {
+      final response = await _http
+          .send(request)
+          .then(http.Response.fromStream)
+          .timeout(timeout);
+      return parseResponse(response);
+    } on TimeoutException {
+      throw timedOut ?? _defaultTimeout;
+    } on http.ClientException {
+      throw offline ?? _defaultOffline;
+    }
+  }
+
+  static const _defaultTimeout = Failure(
+    'The request took longer than expected. Try again or enter the meal manually.',
+    code: 'TIMEOUT',
+    retryable: true,
+  );
+  static const _defaultOffline = Failure(
+    'You appear to be offline. Reconnect to sync or edit your draft.',
+    code: 'OFFLINE',
+    retryable: true,
+  );
 
   static Json parseResponse(http.Response response) {
     final Object? decoded;

@@ -1,7 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../domain/media_storage.dart';
 import '../domain/overview_repository.dart';
+import '../domain/photo_picker.dart';
 import '../domain/session_repository.dart';
+import 'ids.dart';
 
 /// Overridden by the composition root with the demo or live implementation.
 final sessionRepositoryProvider = Provider<SessionRepository>(
@@ -12,3 +15,16 @@ final sessionRepositoryProvider = Provider<SessionRepository>(
 final overviewRepositoryProvider = Provider<OverviewRepository>(
   (ref) => throw StateError('Overview repository initialization required'),
 );
+
+/// Overridden by the composition root with the demo or live implementation.
+final mediaStorageProvider = Provider<MediaStorage>(
+  (ref) => throw StateError('Media storage initialization required'),
+);
+
+/// Overridden by the composition root with the device implementation.
+final photoPickerProvider = Provider<PhotoPicker>(
+  (ref) => throw StateError('Photo picker initialization required'),
+);
+
+/// Tests override this to get predictable identifiers.
+final idGeneratorProvider = Provider<IdGenerator>((ref) => newId);

@@ -1,0 +1,7 @@
+/// Route paths. Features navigate by path, so they never import `app/`, where
+/// the router maps each path to a screen.
+abstract final class Routes {
+  static const home = '/';
+  static const log = '/log';
+  static const review = '/review';
+}

@@ -4,6 +4,7 @@ library;
 export 'brand.dart';
 export 'buttons.dart';
 export 'cards.dart';
+export 'confidence_badge.dart';
 export 'dialogs.dart';
 export 'headings.dart';
 export 'indicators.dart';

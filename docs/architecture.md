@@ -39,7 +39,7 @@ app/lib/
 
 **3. Providers.** `domain/` contains no Riverpod. Repository providers live in `data/` and throw by default. `main.dart` overrides them with the live or demo implementation. Controllers and their providers live in `presentation/`. Demo and live behaviour are two implementations of the same interfaces.
 
-**4. App-level concerns.** The session (bootstrap, capabilities, demo or live mode) and the overview snapshot live in `core/`, not in a feature. Every feature depends on them, and `core/` may not depend on a feature, so a `session` feature would force every other feature to import it. Meal photo upload belongs to meal logging, behind a media storage interface. Accounts belong to the auth feature.
+**4. App-level concerns.** The session (bootstrap, capabilities, demo or live mode), the overview snapshot, photo storage, the photo picker and the review screen's arguments live in `core/`, not in a feature. Every feature depends on them, and `core/` may not depend on a feature, so putting them in a feature would force the others to import it. Accounts belong to the auth feature.
 
 **5. Use cases.** A use case exists only for real, testable logic: ranking and budget fit, weekly aggregation, distance, energy estimation and validation. A controller calls a repository directly for plain reads and writes. This is a deliberate, pragmatic deviation from strict clean architecture, so a use case that only forwards one repository call is not added.
 
@@ -63,7 +63,9 @@ Placement follows rule 2: a type is shared only when more than one feature uses 
 | `features/weekly/domain/` | `WeeklyReport`, `WeeklySummary` |
 | `features/settings/domain/` | `calculateEnergy`, `EnergyEstimate`, `Correction` |
 | `features/auth/domain/` | `AccountInfo` |
-| `core/presentation/` | `failureMessage`, which turns a `Failure` into text for people |
+| `core/domain/` (photos) | `PhotoPicker`, `PhotoSource` and `MediaStorage`, used by meal logging and menu scanning |
+| `features/meal_logging/domain/` | `MealLogRepository`, `VoiceRecorder`, `SpeechTranscriber`, and the food entry rules (`buildFood`, `canLogMeal`, limits) |
+| `core/presentation/` | `failureMessage`, which turns a `Failure` into text for people; `ReviewArgs` and `Routes`, so every feature can open the review screen without importing meal logging |
 
 `core/domain/` also holds the `SessionRepository` and `OverviewRepository` interfaces and the `Capabilities` type.
 
@@ -108,7 +110,7 @@ Each step is one branch and one pull request.
 | D2 | Design | Shared component library: `plate_widgets.dart` split into files by family, number formatting helper, widget tests. `ConfidenceBadge` is deferred to F2/F4 because it depends on the `Confidence` domain type |
 | F2 | Flutter | Domain layer: shared entities in `core/domain`, feature-owned entities and logic in each feature's `domain/`, the `Failure` type, the architecture test, and domain tests. JSON conversion is left out of entities on purpose |
 | F3 | Flutter | Data core: API client, auth session, demo store, JSON mappers for the shared entities, session and overview repositories (demo and live), the testable composition root, and a contract test against the SQL migrations |
-| F4 | Flutter | Meal logging (the reference slice) |
+| F4 | Flutter | Meal logging (the reference slice): capture by photo, text or voice, review and edit, save. Adds the photo picker and media storage to the core, `ConfidenceBadge`, the router, and a temporary start screen for trying it |
 | F5–F12 | Flutter | Decide, nearby, today, water, weekly, onboarding, settings, auth |
 | D3 | Design | UX, accessibility and copy review of the finished app (the web shell and icons arrive in F1) |
 | B6 | Backend | Restructure the Edge Function into domain, infrastructure, providers and handler layers, with an import-scanning test |
