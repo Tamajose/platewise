@@ -71,6 +71,9 @@ void main() {
       expect(targetFieldError(''), isNull);
       expect(targetFieldError('abc'), 'Enter a whole number.');
       expect(targetFieldError('900'), targetGuidance);
+      expect(targetGuidance, contains('qualified healthcare professional'));
+      expect(targetGuidance, contains('keep logging without a target'));
+      expect(targetFieldError('1200'), isNull);
       expect(targetFieldError('1800'), isNull);
       expect(waterGoalError('499'), waterGoalMessage);
       expect(waterGoalError('5000'), isNull);
