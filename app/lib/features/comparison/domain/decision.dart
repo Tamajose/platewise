@@ -33,3 +33,18 @@ class DecisionResult {
   final List<RankedMeal> meals;
   final List<DecisionFailure> failures;
 }
+
+class DishRecommendation {
+  const DishRecommendation({
+    required this.portion,
+    required this.adjustments,
+    required this.range,
+    required this.confidence,
+    required this.assumptions,
+  });
+  final String portion;
+  final List<String> adjustments;
+  final CalorieRange range;
+  final Confidence confidence;
+  final List<String> assumptions;
+}

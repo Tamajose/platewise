@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { ApiError, estimate, fail, modelEstimate, redact } from "../domain/contracts.ts";
+import {
+  ApiError,
+  dishRecommendationOutput,
+  estimate,
+  fail,
+  modelEstimate,
+  redact,
+} from "../domain/contracts.ts";
 import { menuOutput, normalizeMenu } from "../domain/menu.ts";
 import type {
   ExplanationProvider,
@@ -11,7 +18,7 @@ import type {
   TextNutritionProvider,
 } from "../domain/ports.ts";
 import type { ChatClient } from "./chat_client.ts";
-import { factsPolicy, menuPolicy, nutritionPolicy } from "./prompts.ts";
+import { dishRecommendationPolicy, factsPolicy, menuPolicy, nutritionPolicy } from "./prompts.ts";
 
 const factsOutput = z.strictObject({ indices: z.array(z.number().int().min(0).max(15)).min(1).max(3) });
 
@@ -69,6 +76,38 @@ export class TextAdapter implements TextNutritionProvider, ExplanationProvider {
     return estimate(value, this.model);
   }
 
+  async recommendDish(text: string, language: Language, budget: number) {
+    const value = dishRecommendationOutput.parse(
+      await this.client.structured(
+        this.model,
+        "dish_recommendation",
+        dishRecommendationPolicy,
+        JSON.stringify({ language, dish: redact(text), budget }),
+        dishRecommendationOutput,
+      ),
+    );
+    if (value.calorie_high > budget) {
+      fail(
+        "NO_FITTING_RECOMMENDATION",
+        "I couldn’t find a plausible portion and recipe adjustment within that budget. Try a different dish or increase the meal budget.",
+        422,
+      );
+    }
+    if (value.confidence === "low") {
+      fail(
+        "LOW_CONFIDENCE_RECOMMENDATION",
+        "I’m not confident enough to suggest a portion for this dish. Add preparation details or try another dish.",
+        422,
+      );
+    }
+    return {
+      ...value,
+      portion: redact(value.portion).slice(0, 160),
+      adjustments: value.adjustments.map((entry) => redact(entry).slice(0, 160)),
+      assumptions: value.assumptions.map((entry) => redact(entry).slice(0, 200)),
+    };
+  }
+
   async chooseFacts(facts: readonly string[]) {
     const response = await this.client.structured(
       this.model,
@@ -119,6 +158,9 @@ export class UnavailableAdapter
     return this.unavailable();
   }
   analyzeText(_text: string, _language: Language): Promise<never> {
+    return this.unavailable();
+  }
+  recommendDish(_text: string, _language: Language, _budget: number): Promise<never> {
     return this.unavailable();
   }
   chooseFacts(_facts: readonly string[]): Promise<never> {

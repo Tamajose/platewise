@@ -49,5 +49,32 @@ class LiveComparisonRepository implements ComparisonRepository {
   }
 
   @override
+  Future<DishRecommendation> recommendDish(
+    String dish,
+    String language,
+    int budget,
+  ) async {
+    final json = await _api.call('recommend_dish', {
+      'dish': dish,
+      'language': language,
+      'budget': budget,
+    });
+    final low = json['calorie_low'] as int;
+    final high = json['calorie_high'] as int;
+    if (high < low || high > budget) {
+      throw const Failure(
+        'The service could not provide a portion within your budget. Try again or change the dish.',
+      );
+    }
+    return DishRecommendation(
+      portion: json['portion'] as String,
+      adjustments: (json['adjustments'] as List).cast<String>(),
+      range: CalorieRange(low, high),
+      confidence: Confidence.values.byName(json['confidence'] as String),
+      assumptions: (json['assumptions'] as List).cast<String>(),
+    );
+  }
+
+  @override
   List<MenuOption>? sampleMenu() => null;
 }

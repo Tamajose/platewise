@@ -130,6 +130,95 @@ class _DecideScreenState extends ConsumerState<DecideScreen> {
             ],
           ),
         ),
+        const SizedBox(height: 14),
+        Surface(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SectionTitle(
+                'Plan a dish',
+                detail: 'Name a dish you plan to cook for a suggested portion and possible recipe adjustments within your budget.',
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                enabled: !state.recommendationBusy,
+                onChanged: controller.setDishText,
+                maxLength: 300,
+                decoration: const InputDecoration(
+                  labelText: 'Dish you plan to cook',
+                  hintText: 'For example, chicken curry with rice',
+                ),
+              ),
+              const SizedBox(height: 8),
+              PrimaryButton(
+                'Suggest a portion',
+                icon: Icons.soup_kitchen_outlined,
+                busy: state.recommendationBusy,
+                onPressed: controller.recommendDish,
+              ),
+              if (state.recommendationBusy)
+                const Padding(
+                  padding: EdgeInsets.only(top: 12),
+                  child: LoadingState('Planning a portion…'),
+                ),
+              if (state.recommendationError != null) ...[
+                const SizedBox(height: 10),
+                ErrorState(state.recommendationError!),
+              ],
+              if (state.recommendation case final recommendation?) ...[
+                const SizedBox(height: 14),
+                Surface(
+                  color: PlateColors.sage,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Suggested portion',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        recommendation.portion,
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      Text(
+                        '${recommendation.range.label} kcal estimated · ${number(state.recommendationBudget!)} kcal budget',
+                      ),
+                      if (recommendation.adjustments.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          'Possible recipe adjustments',
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                        for (final adjustment in recommendation.adjustments)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 5),
+                            child: Text('• $adjustment'),
+                          ),
+                      ],
+                      if (recommendation.assumptions.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          'Assumptions',
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                        for (final assumption in recommendation.assumptions)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 5),
+                            child: Text(assumption),
+                          ),
+                      ],
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Nutrition values are estimates, not guarantees or individualized medical advice. This plan has not been logged.',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
         const SizedBox(height: 18),
         AdaptiveColumns(
           primaryFlex: 5,

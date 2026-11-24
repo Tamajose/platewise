@@ -28,6 +28,18 @@ class DemoComparisonRepository implements ComparisonRepository {
   }
 
   @override
+  Future<DishRecommendation> recommendDish(
+    String dish,
+    String language,
+    int budget,
+  ) async {
+    throw const Failure(
+      'Planned-dish recommendations need live mode with a configured text provider.',
+      code: 'DEMO_ONLY',
+    );
+  }
+
+  @override
   List<MenuOption>? sampleMenu() => const [
     MenuOption('Chicken tikka rice bowl', portion: 'One bowl with rice'),
     MenuOption('Vegetable khichuri', portion: 'One bowl'),

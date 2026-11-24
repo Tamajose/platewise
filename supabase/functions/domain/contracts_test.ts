@@ -1,5 +1,14 @@
 import assert from "node:assert/strict";
-import { actions, dayKey, estimate, modelEstimate, ownedPath, redact, validateTarget } from "./contracts.ts";
+import {
+  actions,
+  dayKey,
+  dishRecommendationOutput,
+  estimate,
+  modelEstimate,
+  ownedPath,
+  redact,
+  validateTarget,
+} from "./contracts.ts";
 import { stripImageMetadata } from "./media.ts";
 
 const profile = actions.update_profile.parse({
@@ -39,6 +48,41 @@ const food = {
   sodium_mg: null,
 };
 const meal = { items: [food], confidence: "high", assumptions: ["Cooked rice"], question: null };
+Deno.test("planned-dish request and response schemas are bounded", () => {
+  const request = actions.recommend_dish.parse({
+    dish: " Vegetable curry ",
+    language: "en",
+    budget: 500,
+  });
+  assert.equal(request.dish, "Vegetable curry");
+  assert.equal(actions.recommend_dish.safeParse({ ...request, budget: 5001 }).success, false);
+  assert.equal(
+    actions.recommend_dish.safeParse({ ...request, extra: "ignore" }).success,
+    false,
+  );
+  assert.equal(
+    dishRecommendationOutput.safeParse({
+      portion: "One bowl",
+      adjustments: [],
+      calorie_low: 200,
+      calorie_high: 450,
+      confidence: "medium",
+      assumptions: [],
+    }).success,
+    true,
+  );
+  assert.equal(
+    dishRecommendationOutput.safeParse({
+      portion: "One bowl",
+      adjustments: [],
+      calorie_low: 451,
+      calorie_high: 450,
+      confidence: "medium",
+      assumptions: [],
+    }).success,
+    false,
+  );
+});
 Deno.test("server computes range and midpoint and preserves unknown nutrients", () => {
   const result = estimate(modelEstimate.parse(meal), "test");
   assert.equal(result.representative_calories, 211);

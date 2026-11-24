@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -12,6 +13,7 @@ import 'package:platewise/core/domain/domain.dart';
 import 'package:timezone/data/latest_all.dart' as timezone;
 import 'package:platewise/core/presentation/review_args.dart';
 import 'package:platewise/core/presentation/routes.dart';
+import 'package:platewise/core/presentation/session_state.dart';
 import 'package:platewise/core/theme/plate_theme.dart';
 import 'package:platewise/features/comparison/data/comparison_providers.dart';
 import 'package:platewise/features/comparison/data/demo_comparison_repository.dart';
@@ -20,6 +22,7 @@ import 'package:platewise/features/comparison/domain/compare_photos.dart';
 import 'package:platewise/features/comparison/domain/comparison_repository.dart';
 import 'package:platewise/features/comparison/domain/decision.dart';
 import 'package:platewise/features/comparison/presentation/decide_controller.dart';
+import 'package:platewise/features/comparison/presentation/decide_screen.dart';
 import 'package:platewise/features/comparison/presentation/menu_review_args.dart';
 import 'package:platewise/features/comparison/presentation/menu_review_screen.dart';
 
@@ -27,7 +30,16 @@ import '../meal_logging/fakes.dart';
 
 class FakeComparison implements ComparisonRepository {
   final compared = <List<DecisionOption>>[];
-  Object? compareError, estimateError;
+  Object? compareError, estimateError, recommendationError;
+  DishRecommendation recommendation = const DishRecommendation(
+    portion: 'One small bowl',
+    adjustments: ['Use less oil'],
+    range: CalorieRange(300, 450),
+    confidence: Confidence.medium,
+    assumptions: ['Prepared with moderate oil'],
+  );
+  final recommendations = <({String dish, String language, int budget})>[];
+  Completer<DishRecommendation>? recommendationGate;
   List<RankedMeal> ranked = [];
   List<DecisionFailure> failures = [];
 
@@ -45,6 +57,17 @@ class FakeComparison implements ComparisonRepository {
   Future<MealDraft> estimatePhoto(String? imagePath) async {
     if (estimateError != null) throw estimateError!;
     return draftOf([rice]);
+  }
+
+  @override
+  Future<DishRecommendation> recommendDish(
+    String dish,
+    String language,
+    int budget,
+  ) async {
+    recommendations.add((dish: dish, language: language, budget: budget));
+    if (recommendationError != null) throw recommendationError!;
+    return recommendationGate?.future ?? recommendation;
   }
 
   @override
@@ -250,6 +273,73 @@ void main() {
   });
 
   group('live comparison', () {
+    test('sends a planned dish and maps the budget-bounded response', () async {
+      late Map<String, Object?> body;
+      final api = ApiClient(
+        endpoint: apiEndpoint('https://abc.supabase.co'),
+        publishableKey: 'k',
+        bearer: () async => 't',
+        httpClient: MockClient((request) async {
+          body = jsonDecode(request.body) as Map<String, Object?>;
+          return http.Response(
+            jsonEncode({
+              'version': 1,
+              'ok': true,
+              'data': {
+                'portion': 'One small bowl',
+                'adjustments': ['Use less oil'],
+                'calorie_low': 300,
+                'calorie_high': 450,
+                'confidence': 'medium',
+                'assumptions': ['Prepared with moderate oil'],
+              },
+            }),
+            200,
+          );
+        }),
+      );
+      final result = await LiveComparisonRepository(api)
+          .recommendDish('Vegetable curry', 'en', 500);
+      expect(body['action'], 'recommend_dish');
+      expect(body['input'], {
+        'dish': 'Vegetable curry',
+        'language': 'en',
+        'budget': 500,
+      });
+      expect(result.range.low, 300);
+      expect(result.range.high, 450);
+      expect(result.adjustments, ['Use less oil']);
+    });
+
+    test('rejects a recommendation above the requested budget', () async {
+      final api = ApiClient(
+        endpoint: apiEndpoint('https://abc.supabase.co'),
+        publishableKey: 'k',
+        bearer: () async => 't',
+        httpClient: MockClient(
+          (request) async => http.Response(
+            jsonEncode({
+              'version': 1,
+              'ok': true,
+              'data': {
+                'portion': 'One bowl',
+                'adjustments': <String>[],
+                'calorie_low': 300,
+                'calorie_high': 600,
+                'confidence': 'medium',
+                'assumptions': <String>[],
+              },
+            }),
+            200,
+          ),
+        ),
+      );
+      await expectLater(
+        LiveComparisonRepository(api).recommendDish('Curry', 'en', 500),
+        throwsA(isA<Failure>()),
+      );
+    });
+
     test('sends options and maps ranked results', () async {
       late Map<String, Object?> body;
       final api = ApiClient(
@@ -322,6 +412,7 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           ...rig.overrides,
+          overviewProvider.overrideWith((ref) async => rig.overviews.value),
           comparisonRepositoryProvider.overrideWithValue(comparison),
         ],
       );
@@ -335,6 +426,108 @@ void main() {
       await controller.pickPhoto(0, PhotoSource.gallery);
       await controller.pickPhoto(1, PhotoSource.gallery);
     }
+
+    test('planning validates the dish and selected budget', () async {
+      final comparison = FakeComparison();
+      final c = open(Rig(), comparison);
+      final controller = c.read(decideControllerProvider.notifier);
+      await controller.recommendDish();
+      expect(
+        c.read(decideControllerProvider).recommendationError,
+        'Enter the dish you plan to cook.',
+      );
+      controller.setDishText('Vegetable curry');
+      await controller.recommendDish();
+      expect(
+        c.read(decideControllerProvider).recommendationError,
+        'Set a positive meal budget before planning a dish.',
+      );
+      expect(comparison.recommendations, isEmpty);
+    });
+
+    test(
+      'planning uses the selected remaining budget and never logs',
+      () async {
+        final rig = Rig(
+          overview: Overview(
+            profile: const Profile(height: 170, weight: 70, target: 2000),
+            targets: const [TargetSnapshot('2026-01-01', 2000)],
+            localDay: DateTime.utc(2026, 6, 1),
+          ),
+        );
+        final comparison = FakeComparison();
+        final c = open(rig, comparison);
+        await c.read(overviewProvider.future);
+        final controller = c.read(decideControllerProvider.notifier)
+          ..setDishText('Vegetable curry');
+        await controller.recommendDish();
+        final state = c.read(decideControllerProvider);
+        expect(comparison.recommendations.single, (
+          dish: 'Vegetable curry',
+          language: 'en',
+          budget: 2000,
+        ));
+        expect(state.recommendation?.range.high, lessThanOrEqualTo(2000));
+        expect(state.recommendationBudget, 2000);
+        expect(rig.meals.saved, isEmpty);
+      },
+    );
+
+    test(
+      'planning discards a result when its inputs change in flight',
+      () async {
+        final comparison = FakeComparison()
+          ..recommendationGate = Completer<DishRecommendation>();
+        final c = open(Rig(), comparison);
+        final controller = c.read(decideControllerProvider.notifier)
+          ..toggleBudgetMode()
+          ..setBudgetText('500')
+          ..setDishText('Vegetable curry');
+        final pending = controller.recommendDish();
+        controller.setDishText('Another curry');
+        comparison.recommendationGate!.complete(comparison.recommendation);
+        await pending;
+        final state = c.read(decideControllerProvider);
+        expect(state.recommendation, isNull);
+        expect(state.recommendationBusy, isFalse);
+      },
+    );
+
+    test(
+      'planning uses manually selected budget and clears stale output',
+      () async {
+        final comparison = FakeComparison();
+        final c = open(Rig(), comparison);
+        final controller = c.read(decideControllerProvider.notifier)
+          ..toggleBudgetMode()
+          ..setBudgetText('500')
+          ..setDishText('Vegetable curry');
+        await controller.recommendDish();
+        expect(comparison.recommendations.single.budget, 500);
+        controller.setBudgetText('700');
+        expect(c.read(decideControllerProvider).recommendation, isNull);
+      },
+    );
+
+    test('an over-budget fake response is never shown', () async {
+      final comparison = FakeComparison()
+        ..recommendation = const DishRecommendation(
+          portion: 'One bowl',
+          adjustments: [],
+          range: CalorieRange(300, 600),
+          confidence: Confidence.medium,
+          assumptions: [],
+        );
+      final c = open(Rig(), comparison);
+      final controller = c.read(decideControllerProvider.notifier)
+        ..toggleBudgetMode()
+        ..setBudgetText('500')
+        ..setDishText('Curry');
+      await controller.recommendDish();
+      final state = c.read(decideControllerProvider);
+      expect(state.recommendation, isNull);
+      expect(state.recommendationError, contains('did not fit'));
+    });
 
     test('comparing needs two photos', () async {
       final c = open(Rig(), FakeComparison());
@@ -455,6 +648,56 @@ void main() {
       rig.picker.error = const Failure('No camera.');
       expect(await controller.prepareMenu(scan: PhotoSource.camera), isNull);
       expect(c.read(decideControllerProvider).error, 'No camera.');
+    });
+  });
+
+  group('decide screen planned-dish flow', () {
+    testWidgets('shows a budgeted recommendation without a logging action', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(900, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final rig = Rig(
+        overview: Overview(
+          profile: const Profile(height: 170, weight: 70, target: 2000),
+          targets: const [TargetSnapshot('2026-01-01', 2000)],
+          localDay: DateTime.utc(2026, 6, 1),
+        ),
+      );
+      final comparison = FakeComparison();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            ...rig.overrides,
+            overviewProvider.overrideWith((ref) async => rig.overviews.value),
+            comparisonRepositoryProvider.overrideWithValue(comparison),
+          ],
+          child: MaterialApp(
+            theme: plateTheme(),
+            home: const Scaffold(body: DecideScreen()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Dish you plan to cook'),
+        'Vegetable curry',
+      );
+      await tester.tap(find.text('Suggest a portion'));
+      await tester.pumpAndSettle();
+      expect(find.text('One small bowl'), findsOneWidget);
+      expect(find.textContaining('300–450 kcal estimated'), findsOneWidget);
+      expect(find.text('Possible recipe adjustments'), findsOneWidget);
+      await tester.drag(find.byType(ListView).first, const Offset(0, -800));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Use less oil'), findsOneWidget);
+      expect(
+        find.textContaining('This plan has not been logged'),
+        findsOneWidget,
+      );
+      expect(find.text('Confirm and log meal'), findsNothing);
+      expect(rig.meals.saved, isEmpty);
     });
   });
 

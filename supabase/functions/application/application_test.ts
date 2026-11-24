@@ -5,6 +5,7 @@ import type { Session } from "../infra/supabase.ts";
 import { compare } from "./compare.ts";
 import { nearby } from "./nearby.ts";
 import { erase } from "./privacy.ts";
+import { run } from "./actions.ts";
 import { createAiProviders } from "../providers/registry.ts";
 
 /** Services with no AI configured, which printed-calorie options never need. */
@@ -59,6 +60,27 @@ Deno.test("a dish that needs the AI reports why when the AI is not configured", 
   const result = await compare(session, p, services);
   assert.equal(result.results.length, 0);
   assert.deepEqual(result.failures.map((f) => f.code), ["AI_UNAVAILABLE", "AI_UNAVAILABLE"]);
+});
+Deno.test("planned-dish recommendations require a configured text provider", async () => {
+  const input = {
+    dish: "Vegetable curry",
+    language: "en",
+    budget: 500,
+  } as const;
+  const cache = {
+    select: () => ({
+      eq: () => ({ eq: () => ({ gt: () => ({ maybeSingle: () => ({ data: null, error: null }) }) }) }),
+    }),
+  };
+  const session = {
+    uid: "u",
+    client: { from: () => ({ select: () => ({ maybeSingle: () => ({ data: null, error: null }) }) }) },
+    admin: { from: () => cache },
+  } as unknown as Session;
+  await assert.rejects(
+    run(session, "recommend_dish", input, services),
+    (error: Error & { code?: string }) => error.code === "AI_UNAVAILABLE",
+  );
 });
 Deno.test("Bangla menu text needs the language switch", async () => {
   const p = compareInput.parse({

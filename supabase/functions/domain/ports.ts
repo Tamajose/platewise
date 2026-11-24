@@ -15,8 +15,17 @@ export type Language = "en" | "bn";
 export interface MealVisionProvider {
   analyzePhoto(image: ImageInput): Promise<MealEstimate>;
 }
+export type DishRecommendation = {
+  portion: string;
+  adjustments: string[];
+  calorie_low: number;
+  calorie_high: number;
+  confidence: "low" | "medium" | "high";
+  assumptions: string[];
+};
 export interface TextNutritionProvider {
   analyzeText(text: string, language: Language): Promise<MealEstimate>;
+  recommendDish(text: string, language: Language, budget: number): Promise<DishRecommendation>;
 }
 export interface SpeechToTextProvider {
   transcribe(audio: File, language: Language): Promise<string>;
