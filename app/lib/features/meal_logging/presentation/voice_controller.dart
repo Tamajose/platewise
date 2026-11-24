@@ -39,9 +39,22 @@ class VoiceState {
 class VoiceController extends Notifier<VoiceState> {
   Timer? _timer;
 
+  ProviderSubscription<VoiceRecorder>? _held;
+
+  /// The one recorder for this voice session. It is created on the first use,
+  /// and listening to its provider keeps it alive until this controller goes.
+  /// Reading it afresh each time would let Riverpod release it, and so close
+  /// the microphone, in the middle of the permission prompt, and a later read
+  /// would make a different recorder.
+  VoiceRecorder get _recorder =>
+      (_held ??= ref.listen(voiceRecorderProvider, (_, _) {})).read();
+
   @override
   VoiceState build() {
-    ref.onDispose(() => _timer?.cancel());
+    ref.onDispose(() {
+      _timer?.cancel();
+      _held?.close();
+    });
     return const VoiceState();
   }
 
@@ -50,11 +63,10 @@ class VoiceController extends Notifier<VoiceState> {
   Future<void> start() async {
     if (state.busy || state.listening) return;
     state = state.copyWith(busy: true, clearError: true);
-    final recorder = ref.read(voiceRecorderProvider);
     try {
-      await recorder.start();
+      await _recorder.start();
       if (!ref.mounted) {
-        await recorder.cancel();
+        await _recorder.cancel();
         return;
       }
       _timer = Timer(const Duration(seconds: maxVoiceSeconds), stop);
@@ -76,7 +88,7 @@ class VoiceController extends Notifier<VoiceState> {
     final locale = state.locale;
     state = state.copyWith(busy: true, listening: false, clearError: true);
     try {
-      final recording = await ref.read(voiceRecorderProvider).stop();
+      final recording = await _recorder.stop();
       if (recording.bytes.length > maxVoiceBytes) {
         throw const Failure('Use a recording under 2 MB, or type your meal.');
       }

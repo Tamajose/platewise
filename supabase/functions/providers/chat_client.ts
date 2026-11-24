@@ -20,6 +20,13 @@ export interface ProviderProfile {
   /** Ends with a slash. */
   readonly baseUrl: string;
   readonly keyVariable: string;
+  /**
+   * Where recordings go. `transcriptions` is the OpenAI-style audio route.
+   * `gemini` sends the recording to Gemini's own API, which has no such route.
+   */
+  readonly speechApi: "transcriptions" | "gemini";
+  /** Gemini's own API address, with a trailing slash. Null for other services. */
+  readonly nativeBaseUrl: string | null;
   readonly structured: StructuredMode;
   /** Asks the service not to keep the request. Not every service accepts the field. */
   readonly sendStoreFalse: boolean;
@@ -87,6 +94,68 @@ export function providerSchema(schema: z.ZodType) {
 }
 
 /**
+ * Sends one request to an AI service and returns its JSON answer. Timeouts,
+ * connection failures and error statuses become API errors that are safe to
+ * show, and a busy or failing service is tried once more.
+ */
+export async function postToService(
+  network: typeof fetch,
+  timeout: number,
+  url: string,
+  init: Omit<RequestInit, "signal">,
+  /** Whether a busy or timed-out service is tried once more. */
+  retry = true,
+) {
+  const attempt = async () => {
+    let response: Response;
+    try {
+      response = await network(url, { ...init, signal: AbortSignal.timeout(timeout) });
+    } catch (error) {
+      if (error instanceof DOMException && ["TimeoutError", "AbortError"].includes(error.name)) {
+        return fail(
+          "AI_TIMEOUT",
+          "Analysis took longer than expected. Try again or enter the meal manually.",
+          504,
+          true,
+        );
+      }
+      return fail(
+        "AI_OFFLINE",
+        "The analysis service could not be reached. Try again or enter the meal manually.",
+        503,
+        true,
+      );
+    }
+    if (!response.ok) {
+      await response.body?.cancel();
+      if (response.status === 429 || response.status >= 500) {
+        return fail(
+          "AI_BUSY",
+          "Analysis is temporarily busy. Try again or enter the meal manually.",
+          503,
+          true,
+        );
+      }
+      return fail(
+        "AI_UNAVAILABLE",
+        "Live analysis is unavailable for this input. You can enter the meal manually.",
+        502,
+      );
+    }
+    try {
+      return await response.json();
+    } catch {
+      return fail(
+        "INVALID_ESTIMATE",
+        "The analysis could not be read. You can enter the meal manually.",
+        422,
+      );
+    }
+  };
+  return retry ? await withRetry(attempt) : await attempt();
+}
+
+/**
  * Talks to a service that offers OpenAI-style chat completions and audio
  * transcriptions. Every failure becomes an API error that is safe to show.
  */
@@ -100,59 +169,13 @@ export class ChatClient {
   ) {}
 
   private async request(path: string, body: unknown, multipart = false) {
-    return await withRetry(async () => {
-      let response: Response;
-      try {
-        response = await this.network(this.profile.baseUrl + path, {
-          method: "POST",
-          headers: {
-            Authorization: "Bearer " + this.key,
-            ...(multipart ? {} : { "Content-Type": "application/json" }),
-          },
-          body: multipart ? body as FormData : JSON.stringify(body),
-          signal: AbortSignal.timeout(this.timeout),
-        });
-      } catch (error) {
-        if (error instanceof DOMException && ["TimeoutError", "AbortError"].includes(error.name)) {
-          return fail(
-            "AI_TIMEOUT",
-            "Analysis took longer than expected. Try again or enter the meal manually.",
-            504,
-            true,
-          );
-        }
-        return fail(
-          "AI_OFFLINE",
-          "The analysis service could not be reached. Try again or enter the meal manually.",
-          503,
-          true,
-        );
-      }
-      if (!response.ok) {
-        await response.body?.cancel();
-        if (response.status === 429 || response.status >= 500) {
-          return fail(
-            "AI_BUSY",
-            "Analysis is temporarily busy. Try again or enter the meal manually.",
-            503,
-            true,
-          );
-        }
-        return fail(
-          "AI_UNAVAILABLE",
-          "Live analysis is unavailable for this input. You can enter the meal manually.",
-          502,
-        );
-      }
-      try {
-        return await response.json();
-      } catch {
-        return fail(
-          "INVALID_ESTIMATE",
-          "The analysis could not be read. You can enter the meal manually.",
-          422,
-        );
-      }
+    return await postToService(this.network, this.timeout, this.profile.baseUrl + path, {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + this.key,
+        ...(multipart ? {} : { "Content-Type": "application/json" }),
+      },
+      body: multipart ? body as FormData : JSON.stringify(body),
     });
   }
 

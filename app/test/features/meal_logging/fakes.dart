@@ -140,6 +140,8 @@ class FakePicker implements PhotoPicker {
   }
 }
 
+/// Behaves like the real plugin: once disposed, it refuses every call, and each
+/// call takes a moment, so a recorder that is released too early is caught.
 class FakeRecorder implements VoiceRecorder {
   Object? startError;
   VoiceRecording recording = VoiceRecording(
@@ -148,22 +150,39 @@ class FakeRecorder implements VoiceRecorder {
     mime: 'audio/mp4',
   );
   final events = <String>[];
+  bool disposed = false;
+
+  Future<void> _use(String event) async {
+    // Long enough for the screen to draw a frame, as a permission prompt is.
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    if (disposed) {
+      throw StateError(
+        'Record has not yet been created or has already been disposed.',
+      );
+    }
+    events.add(event);
+  }
+
   @override
   Future<void> start() async {
-    events.add('start');
+    await _use('start');
     if (startError != null) throw startError!;
   }
 
   @override
   Future<VoiceRecording> stop() async {
-    events.add('stop');
+    await _use('stop');
     return recording;
   }
 
   @override
-  Future<void> cancel() async => events.add('cancel');
+  Future<void> cancel() => _use('cancel');
+
   @override
-  Future<void> dispose() async => events.add('dispose');
+  Future<void> dispose() async {
+    disposed = true;
+    events.add('dispose');
+  }
 }
 
 class FakeTranscriber implements SpeechTranscriber {
@@ -190,6 +209,9 @@ class Rig {
   final media = FakeMedia();
   final picker = FakePicker();
   final recorder = FakeRecorder();
+
+  /// How many times the app asked for a new recorder.
+  int recorderCreations = 0;
   final transcriber = FakeTranscriber();
 
   List<Override> get overrides => [
@@ -199,7 +221,10 @@ class Rig {
     mediaStorageProvider.overrideWithValue(media),
     photoPickerProvider.overrideWithValue(picker),
     speechTranscriberProvider.overrideWithValue(transcriber),
-    voiceRecorderProvider.overrideWith((ref) => recorder),
+    voiceRecorderProvider.overrideWith((ref) {
+      recorderCreations++;
+      return recorder;
+    }),
     idGeneratorProvider.overrideWithValue(() => 'new-id'),
   ];
 

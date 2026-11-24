@@ -1,11 +1,12 @@
 import 'package:cross_file/cross_file.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:record/record.dart';
 
 import '../../../core/data/ids.dart';
 import '../../../core/domain/failure.dart';
 import '../domain/voice.dart';
 import 'audio_files.dart' if (dart.library.io) 'audio_files_native.dart';
+import 'microphone_errors.dart';
 
 /// Records with the `record` plugin: AAC on devices, Opus or WAV in browsers.
 class RecordVoiceRecorder implements VoiceRecorder {
@@ -19,9 +20,21 @@ class RecordVoiceRecorder implements VoiceRecorder {
 
   @override
   Future<void> start() async {
+    try {
+      await _begin();
+    } on Failure {
+      rethrow;
+    } on Object catch (error) {
+      // The reason helps whoever is debugging. The person sees a plain message.
+      debugPrint('Microphone could not start: $error');
+      throw microphoneFailure(error);
+    }
+  }
+
+  Future<void> _begin() async {
     if (!await _recorder.hasPermission()) {
       throw const Failure(
-        'Microphone permission was denied. Type your meal to continue.',
+        'Microphone permission was denied. Allow the microphone for this site in your browser or device settings, then try again.',
       );
     }
     var encoder = AudioEncoder.aacLc;

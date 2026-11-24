@@ -282,27 +282,97 @@ Deno.test("Gemini photos use a data URI without an image detail field", async ()
   assert.equal("detail" in image, false);
 });
 
-Deno.test("Gemini alone leaves speech off, and another provider can take speech", async () => {
-  const alone = createAiProviders(
-    environment({ PLATEWISE_AI_PROVIDER: "gemini", GEMINI_API_KEY: "g" }),
-    recorder().network,
+/** A network that answers Gemini's generateContent with [text], and records the request. */
+function geminiSpeech(answer: unknown) {
+  const calls: { url: string; headers: Headers; body: Record<string, any> }[] = [];
+  const network: typeof fetch = (input, init) => {
+    calls.push({
+      url: String(input),
+      headers: new Headers(init?.headers),
+      body: JSON.parse(init?.body as string),
+    });
+    return Promise.resolve(Response.json(answer));
+  };
+  return { calls, network };
+}
+const heard = (text: string) => ({ candidates: [{ content: { parts: [{ text }] }, finishReason: "STOP" }] });
+const gemini = { PLATEWISE_AI_PROVIDER: "gemini", GEMINI_API_KEY: "gemini-test-value" };
+const wav = () => new File([new Uint8Array([82, 73, 70, 70])], "meal.wav", { type: "audio/wav" });
+
+Deno.test("Gemini speech sends the recording to generateContent with the key in a header", async () => {
+  const { calls, network } = geminiSpeech(heard(" one cup of rice \n"));
+  const ai = createAiProviders(environment(gemini), network);
+  assert.equal(ai.available("speech"), true);
+  assert.equal(await ai.transcribe(wav(), "en"), "one cup of rice");
+  const [call] = calls;
+  assert.equal(
+    call.url,
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
   );
-  assert.deepEqual(
-    (["vision", "text", "speech"] as const).map((c) => alone.available(c)),
-    [true, true, false],
+  assert.equal(call.url.includes("gemini-test-value"), false);
+  assert.equal(call.headers.get("x-goog-api-key"), "gemini-test-value");
+  const parts = call.body.contents[0].parts;
+  assert.match(parts[0].text, /word for word in English/);
+  assert.match(parts[0].text, /untrusted/);
+  assert.deepEqual(parts[1].inline_data, { mime_type: "audio/wav", data: btoa("RIFF") });
+  assert.equal(call.body.generationConfig.temperature, 0);
+});
+
+Deno.test("Gemini speech names the language and maps the recording types the app makes", async () => {
+  const { calls, network } = geminiSpeech(heard("ভাত"));
+  const ai = createAiProviders(environment(gemini), network);
+  await ai.transcribe(new File([new Uint8Array(30)], "meal.m4a", { type: "audio/mp4" }), "bn");
+  await ai.transcribe(new File([new Uint8Array(30)], "meal.webm", { type: "audio/webm" }), "en");
+  assert.match(calls[0].body.contents[0].parts[0].text, /Bangla/);
+  assert.equal(calls[0].body.contents[0].parts[1].inline_data.mime_type, "audio/m4a");
+  assert.equal(calls[1].body.contents[0].parts[1].inline_data.mime_type, "audio/webm");
+});
+
+Deno.test("Gemini speech joins the parts of a reply and treats silence or a block as unclear", async () => {
+  const joined = createAiProviders(
+    environment(gemini),
+    geminiSpeech({ candidates: [{ content: { parts: [{ text: "rice " }, { text: "and dal" }] } }] }).network,
   );
+  assert.equal(await joined.transcribe(wav(), "en"), "rice and dal");
+  for (const answer of [{ candidates: [] }, heard(""), { promptFeedback: { blockReason: "SAFETY" } }]) {
+    const ai = createAiProviders(environment(gemini), geminiSpeech(answer).network);
+    await assert.rejects(ai.transcribe(wav(), "en"), (e: ApiError) => e.code === "UNCLEAR_AUDIO");
+  }
+});
+
+Deno.test("Gemini speech failures are safe and an unknown recording type is refused", async () => {
+  const status = (code: number): typeof fetch => () =>
+    Promise.resolve(new Response("secret", { status: code }));
+  const busy = createAiProviders(environment(gemini), status(429), 50);
+  await assert.rejects(busy.transcribe(wav(), "en"), (e: ApiError) => e.code === "AI_BUSY" && e.retryable);
+  const refused = createAiProviders(environment(gemini), status(400), 50);
+  await assert.rejects(refused.transcribe(wav(), "en"), (e: ApiError) => e.code === "AI_UNAVAILABLE");
+  const ai = createAiProviders(environment(gemini), geminiSpeech(heard("x")).network);
   await assert.rejects(
-    alone.transcribe(new File([new Uint8Array(30)], "meal.wav"), "en"),
-    /unavailable/,
+    ai.transcribe(new File([new Uint8Array(30)], "meal.mp3", { type: "audio/mpeg" }), "en"),
+    (e: ApiError) => e.code === "AUDIO_TYPE",
   );
+});
+
+Deno.test("a slow Gemini recording fails once, quickly, with a clear timeout", async () => {
+  let calls = 0;
+  const hang: typeof fetch = (_input, init) => {
+    calls++;
+    return new Promise((_resolve, reject) => {
+      init?.signal?.addEventListener("abort", () => reject(init.signal?.reason));
+    });
+  };
+  const ai = createAiProviders(environment(gemini), hang, 60);
+  const started = performance.now();
+  await assert.rejects(ai.transcribe(wav(), "en"), (e: ApiError) => e.code === "AI_TIMEOUT");
+  assert.equal(calls, 1);
+  assert.ok(performance.now() - started < 400);
+});
+
+Deno.test("another provider can still take speech while Gemini does photos and text", async () => {
   const { calls, network } = recorder();
   const mixed = createAiProviders(
-    environment({
-      PLATEWISE_AI_PROVIDER: "gemini",
-      GEMINI_API_KEY: "g",
-      PLATEWISE_SPEECH_PROVIDER: "groq",
-      GROQ_API_KEY: "q",
-    }),
+    environment({ ...gemini, PLATEWISE_SPEECH_PROVIDER: "groq", GROQ_API_KEY: "q" }),
     network,
   );
   assert.equal(mixed.identity.kind, "gemini+gemini+groq");

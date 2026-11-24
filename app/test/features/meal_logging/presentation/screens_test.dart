@@ -257,12 +257,20 @@ void main() {
       rig.transcriber.text = 'two eggs';
       await open(tester, rig);
       await tapText(tester, 'Voice');
-      await tapText(tester, 'Record voice note');
+      // A real microphone takes many frames to start, so draw frames while
+      // it does. A recorder released between frames would be disposed here.
+      await tester.tap(find.text('Record voice note'));
+      await tester.pumpAndSettle(const Duration(milliseconds: 10));
+      expect(rig.recorder.disposed, isFalse);
       expect(find.text('Stop and transcribe'), findsOneWidget);
       expect(find.textContaining('Recording ·'), findsOneWidget);
-      await tapText(tester, 'Stop and transcribe');
+      await tester.tap(find.text('Stop and transcribe'));
+      await tester.pumpAndSettle(const Duration(milliseconds: 10));
+      expect(rig.recorder.disposed, isFalse);
       expect(find.text('two eggs'), findsOneWidget);
       expect(rig.recorder.events, ['start', 'stop']);
+      // One recorder served the whole recording.
+      expect(rig.recorderCreations, 1);
     });
 
     testWidgets('without live speech outside demo it asks for typing', (
