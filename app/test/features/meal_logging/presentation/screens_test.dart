@@ -132,6 +132,33 @@ void main() {
       expect(find.text('Log meal'), findsOneWidget);
     });
 
+    testWidgets(
+      'a low-confidence photo shows guidance instead of nutrition values',
+      (tester) async {
+        final rig = Rig();
+        rig.meals.analyzeError = const Failure(
+          'I’m not confident enough to estimate this meal from the photo. Try a clearer photo or describe the dishes and portions, or enter the meal manually. If you need nutrition guidance for a health decision, consult a qualified healthcare professional.',
+        );
+        rig.picker.result = tinyPng();
+        await open(tester, rig);
+        await tapText(tester, 'Gallery');
+        await tapText(tester, 'Estimate meal');
+
+        expect(
+          find.textContaining('not confident enough to estimate'),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining('qualified healthcare professional'),
+          findsOneWidget,
+        );
+        expect(find.text('Enter meal manually'), findsOneWidget);
+        expect(find.text('Check your estimate'), findsNothing);
+        expect(find.text('175–225 kcal'), findsNothing);
+        expect(rig.media.discarded, ['u/photo.jpg']);
+      },
+    );
+
     testWidgets('a photo is chosen, then estimated', (tester) async {
       final rig = Rig();
       rig.picker.result = tinyPng();

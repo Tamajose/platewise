@@ -95,7 +95,7 @@ export function validateTarget(p: z.infer<typeof profile>) {
   if (n !== null && (n < targetPolicy.minimum || n > targetPolicy.maximum)) {
     fail(
       "TARGET_RANGE",
-      "That target is outside the pilot range. You can keep logging without a target and speak with a qualified professional about your needs.",
+      "That target is outside the 1,200–5,000 kcal pilot range. You can keep logging without a target. Please speak with a qualified healthcare professional about your individual calorie needs, especially if a target below 1,200 kcal seems necessary.",
     );
   }
   if (n !== null && !p.target_confirmed) {
