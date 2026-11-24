@@ -44,6 +44,7 @@ These change how the app looks or reads, so they are for the design owner. None 
 | 4 | Today puts "Compare meals" as the primary button and "Log meal" second | This follows the "decide before you eat" idea, but most daily use is logging | Confirm which action should be primary |
 | 5 | Loading messages vary: "Opening PlateWise…", "Opening your log…", "Loading your water log…" | Small inconsistency | Choose one pattern, such as "Loading …" |
 | 6 | The interface is English only. Bangla appears as an analysis language, not as interface text | The product targets Bangladesh | Decide whether Bangla interface text is in scope, and plan translation and the Noto Sans Bengali fallback |
+| 7 | A snack bar such as "Meal added to Today" can sit over the bottom action of the next screen for a few seconds, as seen in the comparison screenshot | The next action is briefly hidden | Show it at the top, or shorten its time, or keep it on the screen that caused it |
 
 ## Not covered
 
