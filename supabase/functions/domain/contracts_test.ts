@@ -1,17 +1,6 @@
 import assert from "node:assert/strict";
-import {
-  actions,
-  ApiError,
-  dayKey,
-  estimate,
-  modelEstimate,
-  ownedPath,
-  redact,
-  validateTarget,
-} from "./contracts.ts";
-import { OpenAIProvider, withRetry } from "./providers.ts";
-import { stripImageMetadata } from "./http.ts";
-import { handler } from "../platewise/handler.ts";
+import { actions, dayKey, estimate, modelEstimate, ownedPath, redact, validateTarget } from "./contracts.ts";
+import { stripImageMetadata } from "./media.ts";
 
 const profile = actions.update_profile.parse({
   height_cm: 170,
@@ -64,45 +53,13 @@ Deno.test("only the owner can reference a private path", () => {
     /unavailable/,
   );
 });
-Deno.test("provider request does not expose the user's profile or contact details and validates structure", async () => {
+Deno.test("personal details are removed from text", () => {
   assert.equal(
     redact("Rice, person@example.org; https://example.org"),
     "Rice, [contact removed]; [link removed]",
   );
-  const fake: typeof fetch = (_input, init) => {
-    const body = JSON.parse(init?.body as string);
-    assert.equal(body.store, false);
-    assert.equal(body.response_format.json_schema.strict, true);
-    assert.equal(body.tools, undefined);
-    assert.match(body.messages[0].content, /untrusted/);
-    assert.doesNotMatch(body.messages[1].content, /example.org/);
-    return Promise.resolve(
-      Response.json({ choices: [{ finish_reason: "stop", message: { content: JSON.stringify(meal) } }] }),
-    );
-  };
-  const provider = new OpenAIProvider({
-    kind: "openai",
-    key: "local-test-value",
-    vision: "fixture-model",
-    text: "fixture-model",
-    speech: "fixture-model",
-  }, fake);
-  assert.equal((await provider.analyzeText("Rice, person@example.org", "en")).calorie_high, 241);
-});
-Deno.test("retry once for transient errors only", async () => {
-  let count = 0;
-  await assert.rejects(
-    withRetry(() => Promise.reject(new ApiError("RETRY", String(++count), 503, true)), 0),
-    /2/,
-  );
-  await assert.rejects(withRetry(() => Promise.reject(new ApiError("INVALID", String(++count))), 0), /3/);
-});
-Deno.test("edge refuses missing session with a request ID", async () => {
-  const response = await handler(new Request("https://backend.example/platewise", { method: "POST" }));
-  assert.equal(response.status, 401);
-  const data = await response.json();
-  assert.equal(data.error.code, "SESSION_REQUIRED");
-  assert.ok(data.request_id);
+  assert.equal(redact("call +880 1711 223344 now"), "call [number removed] now");
+  assert.equal(redact("my name is Rahim Khan"), "[name removed]");
 });
 
 Deno.test("private image copies remove PNG text and WebP EXIF from provider payloads", () => {

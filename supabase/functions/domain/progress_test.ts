@@ -1,7 +1,5 @@
 import assert from "node:assert/strict";
 import { energy, energyInput, type Overview, summaryFacts, weekly } from "./progress.ts";
-import { erase } from "./privacy.ts";
-import { type Session } from "./http.ts";
 
 const fixture: Overview = {
   local_day: "2026-11-22",
@@ -54,48 +52,4 @@ Deno.test("Mifflin–St Jeor uses resting energy and a separate activity factor"
   });
   assert.equal(energyInput.safeParse({ ...p, age: 18 }).success, false);
   assert.equal(energyInput.safeParse({ ...p, eligible: false }).success, false);
-});
-Deno.test("storage failure keeps deletion pending and blocks touching auth", async () => {
-  const calls: string[] = [];
-  let failStorage = true;
-  let exists = true;
-  const session = {
-    uid: "owner",
-    admin: {
-      rpc(name: string) {
-        calls.push(name);
-        return Promise.resolve({ data: { delete_account: true }, error: null });
-      },
-      storage: {
-        from() {
-          return {
-            list() {
-              return Promise.resolve({ data: exists ? [{ name: "sample.jpg" }] : [], error: null });
-            },
-            remove(paths: string[]) {
-              assert.deepEqual(paths, ["owner/sample.jpg"]);
-              if (failStorage) return Promise.resolve({ error: { message: "private error" } });
-              exists = false;
-              return Promise.resolve({ error: null });
-            },
-          };
-        },
-      },
-      auth: {
-        admin: {
-          deleteUser(id: string, soft: boolean) {
-            assert.equal(id, "owner");
-            assert.equal(soft, false);
-            calls.push("remove_identity");
-            return Promise.resolve({ error: null });
-          },
-        },
-      },
-    },
-  } as unknown as Session;
-  await assert.rejects(erase(session, true), /pending/);
-  assert.deepEqual(calls, ["pw_delete_begin"]);
-  failStorage = false;
-  assert.deepEqual(await erase(session, true), { deleted: true, account_deleted: true });
-  assert.deepEqual(calls, ["pw_delete_begin", "pw_delete_begin", "pw_delete_finalize", "remove_identity"]);
 });

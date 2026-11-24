@@ -1,0 +1,119 @@
+import { z } from "zod";
+import { ApiError, estimate, fail, modelEstimate, redact } from "../domain/contracts.ts";
+import { menuOutput, normalizeMenu } from "../domain/menu.ts";
+import type {
+  ExplanationProvider,
+  ImageInput,
+  Language,
+  MealVisionProvider,
+  MenuExtractionProvider,
+  SpeechToTextProvider,
+  TextNutritionProvider,
+} from "../domain/ports.ts";
+import type { ChatClient } from "./chat_client.ts";
+import { factsPolicy, menuPolicy, nutritionPolicy } from "./prompts.ts";
+
+const factsOutput = z.strictObject({ indices: z.array(z.number().int().min(0).max(15)).min(1).max(3) });
+
+/** Reads meals and menus from pictures. */
+export class VisionAdapter implements MealVisionProvider, MenuExtractionProvider {
+  constructor(private readonly client: ChatClient, readonly model: string) {}
+
+  async analyzePhoto(image: ImageInput) {
+    const value = await this.client.structured(
+      this.model,
+      "food_photo",
+      nutritionPolicy,
+      this.client.imageContent(image.bytes, image.mime, "Estimate the visible meal and typical preparation."),
+      modelEstimate,
+    );
+    return estimate(value, this.model);
+  }
+
+  async extractMenu(image: ImageInput) {
+    return normalizeMenu(
+      await this.client.structured(
+        this.model,
+        "menu_options",
+        menuPolicy,
+        this.client.imageContent(image.bytes, image.mime, "Read the visible menu only."),
+        menuOutput,
+      ),
+    );
+  }
+}
+
+/** Estimates meals from descriptions and chooses facts for the weekly summary. */
+export class TextAdapter implements TextNutritionProvider, ExplanationProvider {
+  constructor(private readonly client: ChatClient, readonly model: string) {}
+
+  async analyzeText(text: string, language: Language) {
+    const value = await this.client.structured(
+      this.model,
+      "food_text",
+      nutritionPolicy,
+      JSON.stringify({ language, description: redact(text) }),
+      modelEstimate,
+    );
+    return estimate(value, this.model);
+  }
+
+  async chooseFacts(facts: readonly string[]) {
+    const response = await this.client.structured(
+      this.model,
+      "summary_selection",
+      factsPolicy,
+      JSON.stringify(facts),
+      factsOutput,
+    );
+    return [...new Set(response.indices)].filter((index) => index < facts.length);
+  }
+}
+
+/** Turns a short recording into text. */
+export class SpeechAdapter implements SpeechToTextProvider {
+  constructor(private readonly client: ChatClient, readonly model: string) {}
+
+  async transcribe(audio: File, language: Language) {
+    const text = await this.client.transcribe(this.model, audio, language);
+    const result = z.string().trim().min(2).max(1200).safeParse(text);
+    if (!result.success) {
+      return fail("UNCLEAR_AUDIO", "The recording could not be understood. Try again or type the meal.", 422);
+    }
+    return redact(result.data);
+  }
+}
+
+/** Stands in for a capability that is not configured. Every call says so. */
+export class UnavailableAdapter
+  implements
+    MealVisionProvider,
+    MenuExtractionProvider,
+    TextNutritionProvider,
+    ExplanationProvider,
+    SpeechToTextProvider {
+  private unavailable(): Promise<never> {
+    return Promise.reject(
+      new ApiError(
+        "AI_UNAVAILABLE",
+        "Live analysis is unavailable here. You can enter the meal manually.",
+        503,
+      ),
+    );
+  }
+  analyzePhoto(_image: ImageInput): Promise<never> {
+    return this.unavailable();
+  }
+  extractMenu(_image: ImageInput): Promise<never> {
+    return this.unavailable();
+  }
+  analyzeText(_text: string, _language: Language): Promise<never> {
+    return this.unavailable();
+  }
+  chooseFacts(_facts: readonly string[]): Promise<never> {
+    return this.unavailable();
+  }
+  transcribe(_audio: File, _language: Language): Promise<never> {
+    return this.unavailable();
+  }
+}
