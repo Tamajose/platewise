@@ -3,7 +3,7 @@ import { SpeechAdapter, TextAdapter, UnavailableAdapter, VisionAdapter } from ".
 import { ChatClient, type ProviderProfile, type StructuredMode } from "./chat_client.ts";
 
 /**
- * The services PlateWise can talk to. Both offer OpenAI-style endpoints. Add a
+ * The services PlateWise can talk to. Each offers OpenAI-style endpoints. Add a
  * profile here to support another one that does.
  *
  * Model names are defaults only and change often. Set PLATEWISE_VISION_MODEL,
@@ -18,6 +18,7 @@ export const profiles: Readonly<Record<string, ProviderProfile>> = {
     keyVariable: "OPENAI_API_KEY",
     structured: "strict",
     sendStoreFalse: true,
+    maxReplyTokens: 3200,
     imageDetail: "high",
     defaults: { vision: "gpt-4.1-mini", text: "gpt-4.1-mini", speech: "gpt-4o-mini-transcribe" },
   },
@@ -27,8 +28,24 @@ export const profiles: Readonly<Record<string, ProviderProfile>> = {
     keyVariable: "GROQ_API_KEY",
     structured: "schema",
     sendStoreFalse: false,
+    maxReplyTokens: 3200,
     imageDetail: null,
     defaults: { vision: null, text: "openai/gpt-oss-120b", speech: "whisper-large-v3-turbo" },
+  },
+  // Gemini's OpenAI-compatible endpoint takes chat completions with images. It has
+  // no /audio/transcriptions route, so speech stays off until another provider is
+  // chosen for it. Its support for response schemas is unclear, so replies are
+  // requested in the prompt and validated here. Thinking models can spend a token
+  // cap on reasoning, so no cap is sent.
+  gemini: {
+    name: "gemini",
+    baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai/",
+    keyVariable: "GEMINI_API_KEY",
+    structured: "prompt",
+    sendStoreFalse: false,
+    maxReplyTokens: null,
+    imageDetail: null,
+    defaults: { vision: "gemini-3.5-flash-lite", text: "gemini-3.5-flash-lite", speech: null },
   },
 };
 
@@ -47,7 +64,9 @@ const providerVariable = {
 
 function structuredMode(get: Get, profile: ProviderProfile): StructuredMode {
   const chosen = get("PLATEWISE_STRUCTURED_OUTPUT");
-  return chosen === "strict" || chosen === "schema" || chosen === "json" ? chosen : profile.structured;
+  return chosen === "strict" || chosen === "schema" || chosen === "json" || chosen === "prompt"
+    ? chosen
+    : profile.structured;
 }
 
 /** A capability's client and model, or null when it lacks a service, key or model. */

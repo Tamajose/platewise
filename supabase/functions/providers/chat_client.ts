@@ -6,9 +6,13 @@ import { ApiError, fail } from "../domain/contracts.ts";
  * - `strict`: the service must follow the JSON schema exactly.
  * - `schema`: the service tries to follow the JSON schema and may not.
  * - `json`: the service only promises valid JSON, so the schema goes in the prompt.
+ * - `prompt`: no response format is requested at all. The schema goes in the prompt
+ *   and the reply is read as JSON, with or without a code fence. This works on any
+ *   chat model, which makes it the safe choice for a service whose support for the
+ *   other modes is unclear.
  * The reply is always validated again here, whatever the service promises.
  */
-export type StructuredMode = "strict" | "schema" | "json";
+export type StructuredMode = "strict" | "schema" | "json" | "prompt";
 
 /** What differs between services that speak the same chat and transcription API. */
 export interface ProviderProfile {
@@ -19,6 +23,8 @@ export interface ProviderProfile {
   readonly structured: StructuredMode;
   /** Asks the service not to keep the request. Not every service accepts the field. */
   readonly sendStoreFalse: boolean;
+  /** Caps the reply length with `max_completion_tokens`, or sends no cap when null. */
+  readonly maxReplyTokens: number | null;
   /** Image detail level, for services that accept one. */
   readonly imageDetail: "high" | null;
   readonly defaults: {
@@ -35,6 +41,22 @@ export async function withRetry<T>(operation: () => Promise<T>, delay = 220): Pr
     if (!(err instanceof ApiError) || !err.retryable) throw err;
     await new Promise((resolve) => setTimeout(resolve, delay));
     return await operation();
+  }
+}
+
+/**
+ * Reads a model's reply as JSON. Some models wrap it in a code fence or add a
+ * sentence around it, so fall back to the outermost braces.
+ */
+export function parseJsonReply(content: string): unknown {
+  try {
+    return JSON.parse(content);
+  } catch {
+    const fenced = content.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1] ?? content;
+    const start = fenced.indexOf("{");
+    const end = fenced.lastIndexOf("}");
+    if (start < 0 || end <= start) throw new SyntaxError("No JSON object in the reply.");
+    return JSON.parse(fenced.slice(start, end + 1));
   }
 }
 
@@ -143,7 +165,7 @@ export class ChatClient {
     schema: z.ZodType<T>,
   ): Promise<T> {
     const jsonSchema = providerSchema(schema);
-    const system = this.mode === "json"
+    const system = this.mode === "json" || this.mode === "prompt"
       ? instructions + " Reply with one JSON object that matches this JSON Schema: " +
         JSON.stringify(jsonSchema)
       : instructions;
@@ -151,20 +173,23 @@ export class ChatClient {
       model,
       ...(this.profile.sendStoreFalse ? { store: false } : {}),
       temperature: 0,
-      max_completion_tokens: 3200,
+      ...(this.profile.maxReplyTokens === null ? {} : { max_completion_tokens: this.profile.maxReplyTokens }),
       messages: [
         { role: "system", content: system },
         { role: "user", content },
       ],
-      response_format: this.mode === "json"
-        ? { type: "json_object" }
-        : { type: "json_schema", json_schema: { name, strict: this.mode === "strict", schema: jsonSchema } },
+      ...(this.mode === "prompt" ? {} : {
+        response_format: this.mode === "json" ? { type: "json_object" } : {
+          type: "json_schema",
+          json_schema: { name, strict: this.mode === "strict", schema: jsonSchema },
+        },
+      }),
     });
     const entry = response?.choices?.[0];
     let answer: unknown;
     try {
       if (entry?.finish_reason !== "stop" || entry.message?.refusal) throw new Error();
-      answer = JSON.parse(entry.message.content);
+      answer = parseJsonReply(entry.message.content);
     } catch {
       return fail(
         "INVALID_ESTIMATE",

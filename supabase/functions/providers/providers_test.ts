@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import assert from "node:assert/strict";
 import { ApiError } from "../domain/contracts.ts";
-import { withRetry } from "./chat_client.ts";
+import { parseJsonReply, withRetry } from "./chat_client.ts";
 import { createAiProviders, profiles } from "./registry.ts";
 
 const food = {
@@ -28,9 +28,12 @@ function recorder(content: unknown = meal) {
     calls.push({ url: String(input), headers: new Headers(init?.headers), body });
     return Promise.resolve(
       Response.json(
-        body instanceof FormData
-          ? { text: "one cup of rice" }
-          : { choices: [{ finish_reason: "stop", message: { content: JSON.stringify(content) } }] },
+        body instanceof FormData ? { text: "one cup of rice" } : {
+          choices: [{
+            finish_reason: "stop",
+            message: { content: typeof content === "string" ? content : JSON.stringify(content) },
+          }],
+        },
       ),
     );
   };
@@ -211,4 +214,74 @@ Deno.test("retry once for transient errors only", async () => {
     /2/,
   );
   await assert.rejects(withRetry(() => Promise.reject(new ApiError("INVALID", String(++count))), 0), /3/);
+});
+
+Deno.test("Gemini asks in the prompt, sends no response format, store or token cap, and reads a fenced reply", async () => {
+  const fence = "```";
+  const { calls, network } = recorder(fence + "json\n" + JSON.stringify(meal) + "\n" + fence);
+  const ai = createAiProviders(
+    environment({ PLATEWISE_AI_PROVIDER: "gemini", GEMINI_API_KEY: "gemini-test-value" }),
+    network,
+  );
+  const result = await ai.analyzeText("Rice and dal", "en");
+  assert.equal(result.calorie_high, 241);
+  const [call] = calls;
+  const body = call.body as Record<string, any>;
+  assert.equal(call.url, "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions");
+  assert.equal(call.headers.get("Authorization"), "Bearer gemini-test-value");
+  assert.equal(body.model, profiles.gemini.defaults.text);
+  for (const field of ["response_format", "store", "max_completion_tokens", "tools"]) {
+    assert.equal(field in body, false, field);
+  }
+  assert.match(body.messages[0].content, /JSON Schema/);
+  assert.match(body.messages[0].content, /untrusted/);
+});
+
+Deno.test("Gemini photos use a data URI without an image detail field", async () => {
+  const { calls, network } = recorder();
+  const ai = createAiProviders(
+    environment({ PLATEWISE_AI_PROVIDER: "gemini", GEMINI_API_KEY: "g" }),
+    network,
+  );
+  assert.equal(ai.available("vision"), true);
+  await ai.analyzePhoto({ bytes: new Uint8Array([1, 2]), mime: "image/jpeg" });
+  const image = (calls[0].body as Record<string, any>).messages[1].content[1].image_url;
+  assert.match(image.url, /^data:image\/jpeg;base64,/);
+  assert.equal("detail" in image, false);
+});
+
+Deno.test("Gemini alone leaves speech off, and another provider can take speech", async () => {
+  const alone = createAiProviders(
+    environment({ PLATEWISE_AI_PROVIDER: "gemini", GEMINI_API_KEY: "g" }),
+    recorder().network,
+  );
+  assert.deepEqual(
+    (["vision", "text", "speech"] as const).map((c) => alone.available(c)),
+    [true, true, false],
+  );
+  await assert.rejects(
+    alone.transcribe(new File([new Uint8Array(30)], "meal.wav"), "en"),
+    /unavailable/,
+  );
+  const { calls, network } = recorder();
+  const mixed = createAiProviders(
+    environment({
+      PLATEWISE_AI_PROVIDER: "gemini",
+      GEMINI_API_KEY: "g",
+      PLATEWISE_SPEECH_PROVIDER: "groq",
+      GROQ_API_KEY: "q",
+    }),
+    network,
+  );
+  assert.equal(mixed.identity.kind, "gemini+gemini+groq");
+  await mixed.transcribe(new File([new Uint8Array(30)], "meal.wav", { type: "audio/wav" }), "en");
+  assert.match(calls[0].url, /api\.groq\.com\/openai\/v1\/audio\/transcriptions/);
+});
+
+Deno.test("a model reply is read as JSON with or without decoration", () => {
+  const fence = "```";
+  assert.deepEqual(parseJsonReply('{"a":1}'), { a: 1 });
+  assert.deepEqual(parseJsonReply(fence + 'json\n{"a":1}\n' + fence), { a: 1 });
+  assert.deepEqual(parseJsonReply('Here you go: {"a":{"b":2}} Enjoy.'), { a: { b: 2 } });
+  assert.throws(() => parseJsonReply("no json here"), SyntaxError);
 });
