@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { minPlannableBudget } from "../domain/contracts.ts";
 import { compareInput } from "../domain/decision.ts";
 import type { Services } from "../domain/ports.ts";
 import type { Session } from "../infra/supabase.ts";
@@ -79,6 +80,40 @@ Deno.test("planned-dish recommendations require a configured text provider", asy
   } as unknown as Session;
   await assert.rejects(
     run(session, "recommend_dish", input, services),
+    (error: Error & { code?: string }) => error.code === "AI_UNAVAILABLE",
+  );
+});
+Deno.test("a budget too small for a portion is refused before any AI call", async () => {
+  const session = {
+    uid: "u",
+    client: { from: () => ({ select: () => ({ maybeSingle: () => ({ data: null, error: null }) }) }) },
+  } as unknown as Session;
+  for (const budget of [1, 30, minPlannableBudget - 1]) {
+    await assert.rejects(
+      run(session, "recommend_dish", { dish: "Vegetable curry", language: "en", budget }, services),
+      (error: Error & { code?: string; status?: number }) =>
+        error.code === "BUDGET_TOO_SMALL" && error.status === 422 && !/skip|fast|starve/i.test(error.message),
+    );
+  }
+});
+Deno.test("the smallest plannable budget is passed on to the AI", async () => {
+  const cache = {
+    select: () => ({
+      eq: () => ({ eq: () => ({ gt: () => ({ maybeSingle: () => ({ data: null, error: null }) }) }) }),
+    }),
+  };
+  const session = {
+    uid: "u",
+    client: { from: () => ({ select: () => ({ maybeSingle: () => ({ data: null, error: null }) }) }) },
+    admin: { from: () => cache },
+  } as unknown as Session;
+  await assert.rejects(
+    run(
+      session,
+      "recommend_dish",
+      { dish: "Vegetable curry", language: "en", budget: minPlannableBudget },
+      services,
+    ),
     (error: Error & { code?: string }) => error.code === "AI_UNAVAILABLE",
   );
 });

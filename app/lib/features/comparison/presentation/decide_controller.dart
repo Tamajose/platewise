@@ -182,6 +182,7 @@ class DecideController extends Notifier<DecideState> {
           'Set a positive meal budget before planning a dish.',
         );
       }
+      if (isSmallBudget(budget)) throw const Failure(planBudgetTooSmallMessage);
       state = state.copyWith(
         recommendationBusy: true,
         clearRecommendation: true,

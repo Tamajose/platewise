@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   actions as coreActions,
   fail,
+  minPlannableBudget,
   ownedPath,
   photoPath,
   redact,
@@ -106,6 +107,14 @@ export async function run<A extends ActionName>(
     }
     case "recommend_dish": {
       const p = input as z.infer<typeof actions.recommend_dish>;
+      if (p.budget < minPlannableBudget) {
+        fail(
+          "BUDGET_TOO_SMALL",
+          "A budget under " + minPlannableBudget +
+            " kcal is too small to size a portion of a cooked dish. You can still compare options or log what you eat. If you are unsure how much to eat, a qualified healthcare professional or dietitian can help.",
+          422,
+        );
+      }
       if (p.language === "bn" && !flags.banglaText) {
         fail(
           "LANGUAGE_UNAVAILABLE",

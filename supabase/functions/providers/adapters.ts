@@ -20,7 +20,6 @@ import type {
 import type { ChatClient } from "./chat_client.ts";
 import { dishRecommendationPolicy, factsPolicy, menuPolicy, nutritionPolicy } from "./prompts.ts";
 import type { TranscriptionClient } from "./gemini_speech.ts";
-import { factsPolicy, menuPolicy, nutritionPolicy } from "./prompts.ts";
 
 const factsOutput = z.strictObject({ indices: z.array(z.number().int().min(0).max(15)).min(1).max(3) });
 

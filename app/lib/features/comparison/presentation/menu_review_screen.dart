@@ -9,6 +9,7 @@ import 'decision_results.dart';
 import 'menu_dish_dialog.dart';
 import 'menu_review_args.dart';
 import 'menu_review_controller.dart';
+import 'small_budget_note.dart';
 
 /// Check the dishes found on a menu, fix names and portions, pick two or
 /// three, and compare them.
@@ -62,6 +63,7 @@ class MenuReviewScreen extends ConsumerWidget {
                 ? 'Sample menu. Edit any dish, then compare two or three options.'
                 : 'Correct names and portions. Leave calories blank when the menu gives only a price.',
           ),
+          SmallBudgetNote(args.budget),
           const SizedBox(height: 12),
           if (args.photo != null) ...[
             FoodPicture(bytes: args.photo),

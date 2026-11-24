@@ -71,6 +71,14 @@ export const profile = z.strictObject({
   preferred_language: language.default("en"),
   target_confirmed: z.boolean().default(false),
 });
+/**
+ * The smallest meal budget, in kcal, for which a portion of a cooked dish is
+ * sized. Below it the app does not suggest a portion, because anything it said
+ * would be a spoonful, not a meal. This is a pilot safeguard that needs clinical
+ * and product review, like the daily target range. The app has the same value.
+ */
+export const minPlannableBudget = 150;
+
 export const dishRecommendationInput = z.strictObject({
   dish: z.string().trim().min(2).max(300),
   language,

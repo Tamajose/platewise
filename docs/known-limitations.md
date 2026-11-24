@@ -25,6 +25,7 @@ AI features need an authorized provider key and current model availability. Two 
 - **Groq defaults are unverified.** The default text model (`openai/gpt-oss-120b`) and speech model (`whisper-large-v3-turbo`) were taken from Groq's documentation and have not been called with a real key. Groq enforces response schemas less strictly than OpenAI by default. The backend validates every reply again, and `PLATEWISE_STRUCTURED_OUTPUT` can change the mode.
 - **Bangla is untested.** The flags stay off by default. Llama and Whisper models do not officially list Bengali, and no Bengali accuracy has been measured for either provider.
 - **The app does not yet read the finer capability flags.** The backend reports `live_vision`, `live_text` and `live_speech`, but the app still shows the photo option when only text and speech are configured. The photo estimate then fails with a clear message.
+- **The 150 kcal minimum for planned dishes is a pilot value.** Below it "Plan a dish" returns `BUDGET_TOO_SMALL` and the app shows a neutral note. The number has had no clinical or product review. Comparing and logging still work at any budget.
 - Text redaction covers common email, link, name-prefix and phone patterns and cannot identify every personal name. Photos and raw audio sent to a provider follow that provider's privacy controls. Users are asked to say only foods and portions.
 
 ## Accounts, data and cleanup
