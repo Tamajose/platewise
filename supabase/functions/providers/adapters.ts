@@ -19,6 +19,8 @@ import type {
 } from "../domain/ports.ts";
 import type { ChatClient } from "./chat_client.ts";
 import { dishRecommendationPolicy, factsPolicy, menuPolicy, nutritionPolicy } from "./prompts.ts";
+import type { TranscriptionClient } from "./gemini_speech.ts";
+import { factsPolicy, menuPolicy, nutritionPolicy } from "./prompts.ts";
 
 const factsOutput = z.strictObject({ indices: z.array(z.number().int().min(0).max(15)).min(1).max(3) });
 
@@ -122,7 +124,7 @@ export class TextAdapter implements TextNutritionProvider, ExplanationProvider {
 
 /** Turns a short recording into text. */
 export class SpeechAdapter implements SpeechToTextProvider {
-  constructor(private readonly client: ChatClient, readonly model: string) {}
+  constructor(private readonly client: TranscriptionClient, readonly model: string) {}
 
   async transcribe(audio: File, language: Language) {
     const text = await this.client.transcribe(this.model, audio, language);

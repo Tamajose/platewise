@@ -29,12 +29,12 @@ Copy app/config/live.example.json to app/config/live.local.json to use flutter r
 | PLATEWISE_OSM_TILES | Flutter define | Optional interactive OSM standard tiles. Default schematic map |
 | SUPABASE_ANON_KEY or SUPABASE_PUBLISHABLE_KEY | Edge runtime | Used with the user's verified JWT to apply RLS |
 | SUPABASE_SERVICE_ROLE_KEY | Edge runtime secret | Supabase-injected key for privileged owner-scoped writes and deletion |
-| OPENAI_API_KEY, GROQ_API_KEY | Edge runtime secret | Key for each provider that is used. A provider with no key is unavailable |
-| PLATEWISE_AI_PROVIDER | Edge runtime | `openai` (default) or `groq`. Another OpenAI-compatible service needs a profile in `supabase/functions/providers/registry.ts` |
+| OPENAI_API_KEY, GROQ_API_KEY, GEMINI_API_KEY | Edge runtime secret | Key for each provider that is used. A provider with no key is unavailable |
+| PLATEWISE_AI_PROVIDER | Edge runtime | `openai` (default), `groq` or `gemini`. Another OpenAI-compatible service needs a profile in `supabase/functions/providers/registry.ts` |
 | PLATEWISE_VISION_PROVIDER, PLATEWISE_TEXT_PROVIDER, PLATEWISE_SPEECH_PROVIDER | Edge runtime | Optional. Choose a different provider for one capability, such as Groq for speech and text and OpenAI for photos |
-| PLATEWISE_STRUCTURED_OUTPUT | Edge runtime | `strict`, `schema` or `json`. How strictly the service must follow the response format. Defaults to `strict` for OpenAI and `schema` for Groq |
-| PLATEWISE_VISION_MODEL, PLATEWISE_TEXT_MODEL | Edge runtime | Per provider. OpenAI defaults to gpt-4.1-mini. Groq defaults to `openai/gpt-oss-120b` for text and has no vision default |
-| PLATEWISE_SPEECH_MODEL | Edge runtime | OpenAI defaults to gpt-4o-mini-transcribe. Groq defaults to whisper-large-v3-turbo |
+| PLATEWISE_STRUCTURED_OUTPUT | Edge runtime | `strict`, `schema`, `json` or `prompt`. How the service is asked for a structured reply. Defaults to `strict` for OpenAI, `schema` for Groq and `prompt` for Gemini |
+| PLATEWISE_VISION_MODEL, PLATEWISE_TEXT_MODEL | Edge runtime | Per provider. OpenAI defaults to gpt-4.1-mini, Gemini to gemini-3.5-flash-lite. Groq defaults to `openai/gpt-oss-120b` for text and has no vision default |
+| PLATEWISE_SPEECH_MODEL | Edge runtime | OpenAI defaults to gpt-4o-mini-transcribe. Groq defaults to whisper-large-v3-turbo. Gemini defaults to gemini-3.5-flash-lite and sends the recording to its own API |
 | PLATEWISE_BANGLA_TEXT_ENABLED, PLATEWISE_BANGLA_SPEECH_ENABLED | Edge runtime | Opt-in after language testing with selected models |
 | PLATEWISE_ALLOWED_ORIGINS | Edge runtime | Exact Flutter web origins, comma-separated |
 | PLATEWISE_CLEANUP_SECRET | Edge runtime secret and scheduler secret | Random string of at least 24 characters |

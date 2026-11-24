@@ -106,7 +106,7 @@ supabase/functions/
 
 `supabase/functions/architecture_test.ts` scans every file and fails on a breach. Its second half proves that it catches each kind of breach. Test files are exempt.
 
-**AI providers.** The domain defines ports (`MealVisionProvider`, `TextNutritionProvider`, `SpeechToTextProvider` and so on), and `providers/` implements them once for any service with OpenAI-style chat and transcription endpoints. A service is a small profile in `providers/registry.ts`: its address, key variable, how strictly it enforces a response schema, and its default models. OpenAI and Groq are included. Vision, text and speech are resolved separately, so each can use a different provider, and a capability without a key or model reports itself unavailable instead of disabling the others. Whatever a service promises, every reply is validated again against the schema.
+**AI providers.** The domain defines ports (`MealVisionProvider`, `TextNutritionProvider`, `SpeechToTextProvider` and so on), and `providers/` implements them once for any service with OpenAI-style chat and transcription endpoints. A service is a small profile in `providers/registry.ts`: its address, key variable, how strictly it enforces a response schema, and its default models. OpenAI, Groq and Gemini are included. Vision, text and speech are resolved separately, so each can use a different provider, and a capability without a key or model reports itself unavailable instead of disabling the others. Whatever a service promises, every reply is validated again against the schema.
 
 Contracts are versioned (API v1). `capabilities` now also reports `live_vision`, `live_text` and `live_speech`.
 
