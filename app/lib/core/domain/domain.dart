@@ -2,6 +2,7 @@
 library;
 
 export 'budget_fit.dart';
+export 'budget_policy.dart';
 export 'calorie_range.dart';
 export 'dates.dart';
 export 'day_log.dart';

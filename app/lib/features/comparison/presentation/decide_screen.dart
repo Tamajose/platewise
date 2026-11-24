@@ -13,6 +13,7 @@ import '../../../core/widgets/widgets.dart';
 import '../domain/decision.dart';
 import 'decide_controller.dart';
 import 'decision_results.dart';
+import 'small_budget_note.dart';
 
 /// Compare meals before choosing: dishes from a menu, or two or three photos.
 class DecideScreen extends ConsumerStatefulWidget {
@@ -67,6 +68,9 @@ class _DecideScreenState extends ConsumerState<DecideScreen> {
     final state = ref.watch(decideControllerProvider);
     final demo = ref.watch(sessionRepositoryProvider).isDemo;
     final remaining = suggestedBudget(ref.watch(overviewProvider).value);
+    final budgetNow = state.useRemaining
+        ? remaining
+        : int.tryParse(state.budgetText.trim());
     return PageScroll(
       maxWidth: 1080,
       children: [
@@ -114,6 +118,7 @@ class _DecideScreenState extends ConsumerState<DecideScreen> {
                         onChanged: controller.setBudgetText,
                       ),
                     ],
+                    SmallBudgetNote(budgetNow),
                     TextButton(
                       onPressed: state.busy
                           ? null
