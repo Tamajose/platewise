@@ -10,7 +10,7 @@ Photos are private owner-scoped objects. The object key is <user UUID>/<random U
 
 | Action | Input | Data |
 |---|---|---|
-| capabilities | Empty object | Live AI and language flags, pilot target version and limits |
+| capabilities | Empty object | Live AI and language flags, pilot target version and limits. `live_ai` is true when any AI capability is configured. `live_vision`, `live_text` and `live_speech` say which ones, because they can use different providers |
 | update_profile | height_cm, weight_kg, daily_calorie_target (nullable), water_goal_ml, timezone, preferred_units, preferred_language, target_confirmed | Profile with server timestamps |
 | dashboard | Empty object | Profile, local_day, meals with items, water, target-history anchor and changes, photo and deletion status |
 | analyze_photo | image_storage_path | Items, total range, midpoint, confidence, assumptions, optional question and model |

@@ -1,7 +1,6 @@
 import { z } from "zod";
-import { confidence, fail, language, photoPath, redact } from "./contracts.ts";
-import { cached, dataError, privateImage, provider, type Session } from "./http.ts";
-import type { MealEstimate } from "./providers.ts";
+import { confidence, language, photoPath, redact } from "./contracts.ts";
+import type { MealEstimate, MenuRow } from "./ports.ts";
 
 const optionId = z.string().regex(/^[\w-]{1,40}$/);
 const menuName = z.string().trim().min(1).max(100);
@@ -29,6 +28,8 @@ export const nearbyInput = z.strictObject({
 
 export type Fit = "fits" | "overlaps" | "above" | "no_budget";
 type RankedEstimate = { calorie_low: number; calorie_high: number; confidence: z.infer<typeof confidence> };
+
+/** Whether the whole range, part of it or none of it fits [budget]. */
 export function fit(range: RankedEstimate, budget: number | null): Fit {
   if (budget === null) return "no_budget";
   if (range.calorie_high <= budget) return "fits";
@@ -37,6 +38,8 @@ export function fit(range: RankedEstimate, budget: number | null): Fit {
 }
 const order: Fit[] = ["fits", "overlaps", "above", "no_budget"];
 const trust = ["high", "medium", "low"];
+
+/** Sort key: fit first, then overage, then confidence, then relative range width. */
 export function score(range: RankedEstimate, budget: number | null) {
   const width = range.calorie_high - range.calorie_low;
   const uncertainty = Math.round(1000 * width / Math.max(1, range.calorie_low + range.calorie_high));
@@ -60,7 +63,8 @@ export function reasoning(range: RankedEstimate, budget: number | null) {
   }
 }
 
-function printedEstimate(name: string, portion: string | null, kcal: number): MealEstimate {
+/** An estimate for a dish whose calories the person reviewed from the menu. */
+export function printedEstimate(name: string, portion: string | null, kcal: number): MealEstimate {
   return {
     items: [{
       name: redact(name).slice(0, 100) || "Menu dish",
@@ -90,62 +94,19 @@ function printedEstimate(name: string, portion: string | null, kcal: number): Me
     model: "reviewed-menu-text",
   };
 }
-export async function compare(session: Session, p: z.infer<typeof compareInput>) {
-  const attempts = await Promise.all(p.options.map(async (option, index) => {
-    try {
-      let result: MealEstimate;
-      if (option.kind === "photo") {
-        const image = await privateImage(session, option.image_storage_path);
-        result = await cached(session, "analyze_photo", image.bytes, () => provider.analyzePhoto(image));
-      } else if (option.printed_kcal !== null) {
-        result = printedEstimate(option.name, option.portion, option.printed_kcal);
-      } else {
-        if (option.language === "bn" && Deno.env.get("PLATEWISE_BANGLA_TEXT_ENABLED") !== "true") {
-          fail(
-            "LANGUAGE_UNAVAILABLE",
-            "Bangla analysis is unavailable. Try English or enter the estimate manually.",
-          );
-        }
-        const text = redact([option.name, option.portion].filter(Boolean).join(", "));
-        const estimated = await cached(
-          session,
-          "analyze_text",
-          JSON.stringify([option.language, text]),
-          () => provider.analyzeText(text, option.language),
-        );
-        result = {
-          ...estimated,
-          assumptions: ["Nutrition inferred from the menu name and portion.", ...estimated.assumptions].slice(
-            0,
-            6,
-          ),
-        };
-      }
-      return {
-        key: option.key,
-        index,
-        estimate: result,
-        image_storage_path: option.kind === "photo" ? option.image_storage_path : null,
-        error: null,
-      };
-    } catch (error) {
-      const known = error instanceof Error && "code" in error && typeof error.code === "string" &&
-        "retryable" in error;
-      return {
-        key: option.key,
-        index,
-        estimate: null,
-        image_storage_path: null,
-        error: {
-          code: known ? error.code : "OPTION_FAILED",
-          message: known ? error.message : "This option could not be estimated.",
-          retryable: known && error.retryable === true,
-        },
-      };
-    }
-  }));
+
+export type Attempt = {
+  key: string;
+  index: number;
+  estimate: MealEstimate | null;
+  image_storage_path: string | null;
+  error: { code: string; message: string; retryable: boolean } | null;
+};
+
+/** Ranks the options that were estimated and lists the ones that failed. */
+export function rankAttempts(attempts: Attempt[], budget: number | null) {
   const sorted = attempts.filter((x) => x.estimate !== null).sort((a, b) =>
-    compareScores(score(a.estimate!, p.budget), score(b.estimate!, p.budget)) || a.index - b.index
+    compareScores(score(a.estimate!, budget), score(b.estimate!, budget)) || a.index - b.index
   );
   return {
     results: sorted.map((x, index) => ({
@@ -153,60 +114,22 @@ export async function compare(session: Session, p: z.infer<typeof compareInput>)
       estimate: x.estimate,
       image_storage_path: x.image_storage_path,
       rank: index + 1,
-      fit: fit(x.estimate!, p.budget),
-      reason: reasoning(x.estimate!, p.budget),
+      fit: fit(x.estimate!, budget),
+      reason: reasoning(x.estimate!, budget),
     })),
     failures: attempts.flatMap((x) => x.error ? [{ key: x.key, ...x.error }] : []),
   };
 }
 
-type Restaurant = {
-  id: string;
-  name: string;
-  latitude: number;
-  longitude: number;
-  source: string;
-  attribution: string;
-  dataset: "seeded";
-  last_verified_at: string | null;
-};
-type MenuRow = {
-  id: string;
-  name: string;
-  portion: string;
-  calorie_low: number;
-  calorie_high: number;
-  protein_g: number | null;
-  carbohydrate_g: number | null;
-  fat_g: number | null;
-  fiber_g: number | null;
-  sodium_mg: number | null;
-  restaurant: Restaurant;
-};
-export interface NearbyMenuProvider {
-  getMenus(session: Session): Promise<MenuRow[]>;
-}
-export class SeededMenuProvider implements NearbyMenuProvider {
-  async getMenus(session: Session): Promise<MenuRow[]> {
-    const { data, error } = await session.client.from("menu_items").select(
-      "id,name,portion,calorie_low,calorie_high,protein_g,carbohydrate_g,fat_g,fiber_g,sodium_mg,restaurant:restaurants!inner(id,name,latitude,longitude,source,attribution,dataset,last_verified_at)",
-    ).eq("restaurant.dataset", "seeded").order("id").limit(150);
-    if (error) dataError(error);
-    return (data ?? []) as unknown as MenuRow[];
-  }
-}
 export function haversine(aLat: number, aLon: number, bLat: number, bLon: number) {
   const rad = Math.PI / 180;
   const value = Math.sin((bLat - aLat) * rad / 2) ** 2 +
     Math.cos(aLat * rad) * Math.cos(bLat * rad) * Math.sin((bLon - aLon) * rad / 2) ** 2;
   return 6371 * 2 * Math.asin(Math.sqrt(Math.min(1, value)));
 }
-export async function nearby(
-  session: Session,
-  p: z.infer<typeof nearbyInput>,
-  adapter: NearbyMenuProvider = new SeededMenuProvider(),
-) {
-  const rows = await adapter.getMenus(session);
+
+/** Seeded venues within the radius, best fit first and then nearest. */
+export function rankNearby(rows: MenuRow[], p: z.infer<typeof nearbyInput>) {
   const options = rows.map((row) => {
     const distance = haversine(p.latitude, p.longitude, row.restaurant.latitude, row.restaurant.longitude);
     const range = { ...row, confidence: "low" as const };

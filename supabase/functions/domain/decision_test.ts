@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
-import { compare, compareInput, compareScores, fit, haversine, nearby, score } from "./decision.ts";
-import { normalizeMenu } from "./providers.ts";
-import { audioKind } from "./audio.ts";
-import type { Session } from "./http.ts";
+import { compareScores, fit, haversine, rankNearby, score } from "./decision.ts";
+import { audioKind } from "./media.ts";
+import { normalizeMenu } from "./menu.ts";
 
 const range = (calorie_low: number, calorie_high: number) => ({
   calorie_low,
@@ -16,32 +15,6 @@ Deno.test("budget fit uses the full range and deterministic ordering without fav
   assert.equal(fit(range(400, 600), null), "no_budget");
   assert.ok(compareScores(score(range(460, 500), 600), score(range(400, 460), 600)) < 0);
   assert.equal(compareScores(score(range(460, 500), 600), score(range(460, 500), 600)), 0);
-});
-Deno.test("two and three options, stable ties and per-option ownership failure", async () => {
-  const m = {
-    kind: "menu",
-    key: "0",
-    name: "Rice and dal",
-    portion: "1 bowl",
-    printed_kcal: 500,
-    language: "en",
-  };
-  const x = {
-    kind: "photo",
-    key: "2",
-    image_storage_path: "22222222-2222-4222-8222-222222222222/33333333-3333-4333-8333-333333333333.jpg",
-  };
-  const session = { uid: "11111111-1111-4111-8111-111111111111" } as Session;
-  const p = compareInput.parse({ budget: 600, options: [m, { ...m, key: "1" }, x] });
-  const result = await compare(session, p);
-  assert.deepEqual(result.results.map((r) => r.key), ["0", "1"]);
-  assert.equal(result.failures[0].code, "NOT_FOUND");
-  assert.equal(compareInput.safeParse({ budget: 600, options: [m, m] }).success, false);
-  assert.equal(
-    (await compare(session, compareInput.parse({ budget: 600, options: [m, { ...m, key: "1" }] }))).results
-      .length,
-    2,
-  );
 });
 Deno.test("prices and injected menu content remain untrusted", () => {
   const menu = normalizeMenu({
@@ -59,7 +32,16 @@ Deno.test("prices and injected menu content remain untrusted", () => {
   assert.deepEqual(menu.options.map((v) => v.printed_kcal), [null, 180, null]);
   assert.doesNotMatch(JSON.stringify(menu), /example\.org/);
 });
-Deno.test("distance, search radius and stable venue ordering", async () => {
+Deno.test("a menu with no readable names is rejected", () => {
+  assert.throws(
+    () =>
+      normalizeMenu({
+        options: [{ name: "  ", portion: null, printed_kcal: null, calorie_evidence: null }],
+      }),
+    /No meal names/,
+  );
+});
+Deno.test("distance, search radius and stable venue ordering", () => {
   assert.equal(haversine(23, 91, 23, 91), 0);
   assert.ok(Math.abs(haversine(0, 0, 0, 1) - 111.195) < .01);
   const venue = {
@@ -84,15 +66,12 @@ Deno.test("distance, search radius and stable venue ordering", async () => {
     sodium_mg: null,
     restaurant: venue,
   };
-  const found = await nearby({} as Session, { latitude: 23, longitude: 91, radius_km: 2, budget: 650 }, {
-    getMenus: () =>
-      Promise.resolve([row, { ...row, id: "a" }, {
-        ...row,
-        id: "c",
-        restaurant: { ...venue, latitude: 24 },
-      }]),
-  });
+  const found = rankNearby(
+    [row, { ...row, id: "a" }, { ...row, id: "c", restaurant: { ...venue, latitude: 24 } }],
+    { latitude: 23, longitude: 91, radius_km: 2, budget: 650 },
+  );
   assert.deepEqual(found.options.map((v) => v.id), ["a", "b"]);
+  assert.equal(found.dataset, "seeded");
 });
 Deno.test("audio media type comes from contained bytes, not filename", () => {
   const WAV = new TextEncoder().encode("RIFF9999WAVE000000000000");

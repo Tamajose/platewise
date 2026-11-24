@@ -1,5 +1,15 @@
-import { fail } from "./contracts.ts";
-import { adminClient, bucket, dataError, drainAssets, env, rpc, type Session } from "./http.ts";
+import { fail } from "../domain/contracts.ts";
+import { env } from "../infra/config.ts";
+import {
+  adminClient,
+  deleteIdentity,
+  deletionPending,
+  drainAssets,
+  listPhotoNames,
+  removePhotoNames,
+  rpc,
+  type Session,
+} from "../infra/supabase.ts";
 
 export async function erase(session: Session, requestAccount: boolean) {
   const { uid, admin } = session;
@@ -15,14 +25,9 @@ export async function erase(session: Session, requestAccount: boolean) {
       true,
     );
   }
-  const storage = admin.storage.from(bucket);
   for (let pass = 0; pass < 7; pass++) {
-    const { data, error } = await storage.list(uid, {
-      limit: 100,
-      offset: 0,
-      sortBy: { column: "name", order: "asc" },
-    });
-    if (error) {
+    const names = await listPhotoNames(admin, uid);
+    if (names === null) {
       return fail(
         "STORAGE_PENDING",
         "PlateWise could not check your photos. Deletion is pending and can be resumed.",
@@ -30,26 +35,22 @@ export async function erase(session: Session, requestAccount: boolean) {
         true,
       );
     }
-    if (data.length === 0) {
+    if (names.length === 0) {
       const final = await rpc<{ delete_account: boolean }>(admin, "pw_delete_finalize", {
         p_user: uid,
         p_account: requestAccount,
       });
-      if (final.delete_account) {
-        const { error: authError } = await admin.auth.admin.deleteUser(uid, false);
-        if (authError) {
-          return fail(
-            "ACCOUNT_DELETE_PENDING",
-            "Your data was removed. Account removal is still pending. Resume deletion in Settings.",
-            503,
-            true,
-          );
-        }
+      if (final.delete_account && !await deleteIdentity(admin, uid)) {
+        return fail(
+          "ACCOUNT_DELETE_PENDING",
+          "Your data was removed. Account removal is still pending. Resume deletion in Settings.",
+          503,
+          true,
+        );
       }
       return { deleted: true, account_deleted: final.delete_account };
     }
-    const { error: removeError } = await storage.remove(data.map((item) => uid + "/" + item.name));
-    if (removeError) {
+    if (!await removePhotoNames(admin, uid, names)) {
       return fail(
         "STORAGE_PENDING",
         "PlateWise could not remove every photo. Deletion is pending and can be resumed.",
@@ -82,7 +83,7 @@ export async function cleanup(request: Request) {
 }
 
 export async function assertAvailable(session: Session) {
-  const { data, error } = await session.client.from("deletion_jobs").select("user_id").maybeSingle();
-  if (error) dataError(error);
-  if (data) fail("DELETION_PENDING", "Data deletion is pending. Resume it in Settings.", 409, true);
+  if (await deletionPending(session.client)) {
+    fail("DELETION_PENDING", "Data deletion is pending. Resume it in Settings.", 409, true);
+  }
 }

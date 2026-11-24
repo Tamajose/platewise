@@ -85,13 +85,30 @@ Entities carry no JSON. Converting to and from the API's wire format is a data-l
 
 ## Backend
 
-The target is a thin handler (the application layer) that validates a request, calls pure domain logic, and reaches infrastructure through interfaces:
+The Edge Function lives in `supabase/functions/` and is split into layers. Each layer may import only the ones beneath it:
 
-- **Domain:** pure logic such as ranking, progress, redaction and contracts, with no network or database access.
-- **Infrastructure:** the Supabase client, RPC calls, storage and caching.
-- **Providers:** the AI adapters behind interfaces.
+```
+supabase/functions/
+  platewise/     # HTTP handler: checks the request, signs the caller in, validates input, hands over. No business rules
+  application/   # use cases: compare, nearby, audio, privacy, and the action dispatcher
+  infra/         # Supabase clients, RPC, storage, cache, CORS, environment
+  providers/     # AI adapters behind the domain ports
+  domain/        # contracts, ranking, progress, menu and media rules, ports. No I/O
+```
 
-The migrated code does not yet follow this. For example, `decision.ts` imports `http.ts`, and `http.ts` mixes client creation, RPC calls, caching and image handling. Step B6 restructures it, with the existing tests as the safety net and an import-scanning test to enforce the layering. Contracts are versioned (API v1).
+| Layer | May import |
+|---|---|
+| `platewise` | every layer |
+| `application` | `domain`, `infra` |
+| `infra` | `domain` |
+| `providers` | `domain` |
+| `domain` | nothing of ours, and no `Deno`, network or database use |
+
+`supabase/functions/architecture_test.ts` scans every file and fails on a breach. Its second half proves that it catches each kind of breach. Test files are exempt.
+
+**AI providers.** The domain defines ports (`MealVisionProvider`, `TextNutritionProvider`, `SpeechToTextProvider` and so on), and `providers/` implements them once for any service with OpenAI-style chat and transcription endpoints. A service is a small profile in `providers/registry.ts`: its address, key variable, how strictly it enforces a response schema, and its default models. OpenAI and Groq are included. Vision, text and speech are resolved separately, so each can use a different provider, and a capability without a key or model reports itself unavailable instead of disabling the others. Whatever a service promises, every reply is validated again against the schema.
+
+Contracts are versioned (API v1). `capabilities` now also reports `live_vision`, `live_text` and `live_speech`.
 
 ## Migration plan
 
@@ -120,5 +137,5 @@ Each step is one branch and one pull request.
 | F11 | Flutter | Settings: profile summary, privacy and consent, data and account deletion, the energy estimate, shared corrections and credits. `ProfileRepository` moves to the core because profile editing and the energy estimate both save the profile |
 | F12 | Flutter | Accounts: keep a guest log by linking a verified email and password, sign in, sign out, and the app-level reset when the signed-in person changes. The last Flutter step: no placeholder screens remain. The entry gate now waits for its own transition before redirecting |
 | D3 | Design | UX, accessibility and copy review of the finished app: an automated audit of every screen at normal and doubled text size (run in the test suite), a copy read-through, and `docs/ux-review.md` with the findings that need a design decision |
-| B6 | Backend | Restructure the Edge Function into domain, infrastructure, providers and handler layers, with an import-scanning test |
+| B6 | Backend | Restructure the Edge Function into domain, application, infrastructure, provider and handler layers, enforced by an import-scanning test. Adds Groq beside OpenAI, with a provider per capability |
 | W1 | Shared | Final docs, web demo launcher, Playwright browser checks and verification |
