@@ -138,4 +138,4 @@ Each step is one branch and one pull request.
 | F12 | Flutter | Accounts: keep a guest log by linking a verified email and password, sign in, sign out, and the app-level reset when the signed-in person changes. The last Flutter step: no placeholder screens remain. The entry gate now waits for its own transition before redirecting |
 | D3 | Design | UX, accessibility and copy review of the finished app: an automated audit of every screen at normal and doubled text size (run in the test suite), a copy read-through, and `docs/ux-review.md` with the findings that need a design decision |
 | B6 | Backend | Restructure the Edge Function into domain, application, infrastructure, provider and handler layers, enforced by an import-scanning test. Adds Groq beside OpenAI, with a provider per capability |
-| W1 | Shared | Final docs, web demo launcher, Playwright browser checks and verification |
+| W1 | Shared | Final docs and verification: the web demo launcher, Playwright browser checks, a demo journey test and an on-device integration test, the traceability matrix, test report, known limitations, handoff notes and project status |

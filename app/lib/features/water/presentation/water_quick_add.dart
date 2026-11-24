@@ -29,6 +29,10 @@ class WaterQuickAdd extends ConsumerWidget {
       ..showSnackBar(
         SnackBar(
           content: Text('Added $amount ml'),
+          // A snack bar with an action stays until dismissed unless told
+          // otherwise, and it would keep covering the buttons beneath it.
+          persist: false,
+          duration: const Duration(seconds: 6),
           action: SnackBarAction(
             label: 'Undo',
             textColor: PlateColors.lime,

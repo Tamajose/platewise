@@ -34,9 +34,14 @@ To build release packages:
 
 Release APK signing is covered in the [deployment instructions](docs/deployment.md).
 
-**Web demo package.** A built web demo can be served with the included launcher, which opens PlateWise in your browser. Extract the web demo ZIP, open PowerShell in the extracted folder and run it with Python.
+**Web demo.** Build the web app, then serve it with the included launcher, which opens PlateWise in your browser. The launcher needs only Python.
 
-    python .\run_platewise.py
+    cd app
+    flutter build web --release --no-web-resources-cdn
+    cd ..
+    python tools/run_platewise.py
+
+To share a built demo, zip the contents of `app/build/web` with `tools/run_platewise.py` beside `index.html`. Extract it, open a terminal in that folder and run `python run_platewise.py`.
 
 Choose **Explore a sample day** for labeled sample history or **Set up my profile** for an empty log. Demo text estimation uses a small, documented lookup. The sample photo, menu and transcript each have their own labeled entry point. Added demo entries live on the device or in the browser profile.
 
@@ -50,13 +55,17 @@ Start the Supabase development stack from the repository root.
     supabase db reset
     supabase functions serve platewise --env-file supabase/functions/.env.local
 
-Use a private local copy of supabase/functions/.env.example for optional AI settings. Supply only the Supabase URL and publishable key to Flutter. On web, the local stack is reached at localhost. An Android emulator reaches the host machine at 10.0.2.2 instead, and a physical Android device needs the computer's network address. Use HTTPS for a hosted project. See [deployment instructions](docs/deployment.md) for flags, SMTP, Android signing, cleanup, limits, and rollback.
+Use a private local copy of supabase/functions/.env.example for the optional AI settings: it chooses OpenAI or Groq, and the model for photos, text and speech. Supply only the Supabase URL and publishable key to Flutter. On web, the local stack is reached at localhost. An Android emulator reaches the host machine at 10.0.2.2 instead, and a physical Android device needs the computer's network address. Use HTTPS for a hosted project. See [deployment instructions](docs/deployment.md) for flags, SMTP, Android signing, cleanup, limits, and rollback.
 
 - [Architecture](docs/architecture.md) and [API v1](docs/api-contracts.md)
 - [Requirements traceability](docs/requirements-traceability.md) and [decisions](docs/decisions.md)
-- [Design system](docs/design-system.md) and [credits](docs/credits.md)
+- [Design system](docs/design-system.md), [UX and accessibility review](docs/ux-review.md) and [credits](docs/credits.md)
 - [Test report](docs/test-report.md), [known limitations](docs/known-limitations.md), and [handoff](docs/handoff.md)
 - [Project status](docs/project-status.md) and [evaluation](docs/evaluation.md)
+
+## Checks
+
+The Flutter app, the Edge Function and the database each run their checks in CI. The [handoff notes](docs/handoff.md) list the commands, including the accessibility audit and the Playwright browser checks of the web demo.
 
 ## Ownership
 

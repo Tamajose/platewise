@@ -6,10 +6,7 @@ on:
 permissions:
   contents: read
 jobs:
-  # Placeholder so the workflow is valid while the repository is assembled.
-  # Real jobs are added by the steps that introduce their code:
-  #   backend database (B1), backend Deno checks (B2), app (F1).
-  # The foundation job remains as a trivial always-green check.
+  # A trivial always-green check that keeps the workflow valid on any change.
   foundation:
     runs-on: ubuntu-latest
     steps:
@@ -45,7 +42,7 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get --enforce-lockfile
-      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: dart format --output=none --set-exit-if-changed lib test integration_test
       - run: flutter analyze
       - run: flutter test
       - run: flutter build web --release --no-web-resources-cdn

@@ -1,0 +1,6 @@
+{
+  "name": "platewise-browser-checks",
+  "version": "1.0.0",
+  "private": true,
+  "devDependencies": { "playwright": "1.65.1" }
+}
