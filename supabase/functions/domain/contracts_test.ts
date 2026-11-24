@@ -15,7 +15,10 @@ Deno.test("target boundaries, eligibility, timezone and future dates", () => {
     validateTarget({ ...profile, daily_calorie_target: allowed });
   }
   for (const denied of [1199, 5001]) {
-    assert.throws(() => validateTarget({ ...profile, daily_calorie_target: denied }), /pilot range/);
+    assert.throws(
+      () => validateTarget({ ...profile, daily_calorie_target: denied }),
+      /1,200–5,000 kcal pilot range.*qualified healthcare professional/,
+    );
   }
   assert.throws(() => validateTarget({ ...profile, target_confirmed: false }), /Confirm/);
   assert.equal(dayKey(new Date("2026-11-21T18:30:00Z"), "Asia/Dhaka"), "2026-11-22");

@@ -28,6 +28,7 @@ coverage/
 *.ipa
 
 # Local tooling and test output
+.commandcode/
 .idea/
 .DS_Store
 supabase/.branches/

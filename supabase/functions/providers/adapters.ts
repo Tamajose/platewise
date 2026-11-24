@@ -24,9 +24,20 @@ export class VisionAdapter implements MealVisionProvider, MenuExtractionProvider
       this.model,
       "food_photo",
       nutritionPolicy,
-      this.client.imageContent(image.bytes, image.mime, "Estimate the visible meal and typical preparation."),
+      this.client.imageContent(
+        image.bytes,
+        image.mime,
+        "Estimate the visible meal and typical preparation. Set confidence to low when the dish identity, ingredients, or portion cannot be identified confidently, especially for visually mixed dishes. Do not guess unsupported ingredients or portions.",
+      ),
       modelEstimate,
     );
+    if (value.confidence === "low") {
+      fail(
+        "LOW_CONFIDENCE_PHOTO",
+        "I’m not confident enough to estimate this meal from the photo. Try a clearer photo or describe the dishes and portions, or enter the meal manually. If you need nutrition guidance for a health decision, consult a qualified healthcare professional.",
+        422,
+      );
+    }
     return estimate(value, this.model);
   }
 

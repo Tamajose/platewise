@@ -74,6 +74,38 @@ Deno.test("Groq uses its own address and key, does not send store, and asks for 
   assert.equal(body.response_format.json_schema.strict, false);
 });
 
+Deno.test("low-confidence photos are blocked while text estimates remain available", async () => {
+  const lowConfidence = {
+    ...meal,
+    confidence: "low",
+  };
+  const photo = recorder(lowConfidence);
+  const photoAi = createAiProviders(
+    environment({ OPENAI_API_KEY: "local-test-value", PLATEWISE_VISION_MODEL: "fixture-model" }),
+    photo.network,
+  );
+  await assert.rejects(
+    photoAi.analyzePhoto({ bytes: new Uint8Array([1, 2, 3]), mime: "image/jpeg" }),
+    (error: ApiError) =>
+      error.code === "LOW_CONFIDENCE_PHOTO" &&
+      /clearer photo.*describe the dishes and portions.*manually.*qualified healthcare professional/.test(
+        error.message,
+      ),
+  );
+  const photoBody = photo.calls[0].body as Record<string, any>;
+  assert.match(
+    photoBody.messages[1].content[0].text,
+    /confidence to low.*visually mixed dishes.*Do not guess/,
+  );
+
+  const textAi = createAiProviders(
+    environment({ OPENAI_API_KEY: "local-test-value", PLATEWISE_TEXT_MODEL: "fixture-model" }),
+    recorder(lowConfidence).network,
+  );
+  const result = await textAi.analyzeText("uncertain mixed meal", "en");
+  assert.equal(result.confidence, "low");
+});
+
 Deno.test("json mode puts the schema in the prompt and still validates the reply", async () => {
   const { calls, network } = recorder({
     items: [{ ...food, calorie_low: 500 }],
