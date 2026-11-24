@@ -178,7 +178,9 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Settings and profile'));
+      await tester.tap(find.byTooltip('Profile'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Settings and privacy'));
       await tester.pumpAndSettle();
       return (store, settings);
     }

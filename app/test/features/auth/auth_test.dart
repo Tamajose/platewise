@@ -218,12 +218,14 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Settings and profile'));
+      await tester.tap(find.byTooltip('Profile'));
       await tester.pumpAndSettle();
-      if (!demo) {
-        await tester.tap(find.text('Manage account'));
-        await tester.pumpAndSettle();
-      }
+      await tester.tap(
+        demo
+            ? find.text('Settings and privacy')
+            : find.byIcon(Icons.manage_accounts_outlined),
+      );
+      await tester.pumpAndSettle();
       return (accounts, users);
     }
 
@@ -255,7 +257,7 @@ void main() {
         );
         await tester.tap(find.byTooltip('Back'));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Manage account'));
+        await tester.tap(find.byIcon(Icons.manage_accounts_outlined));
         await tester.pumpAndSettle();
         await tester.enterText(
           find.widgetWithText(TextField, 'Password'),
@@ -286,7 +288,7 @@ void main() {
       );
       await tester.tap(find.byTooltip('Back'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Manage account'));
+      await tester.tap(find.byIcon(Icons.manage_accounts_outlined));
       await tester.pumpAndSettle();
       expect(
         find.textContaining('Verification is pending for me@example.com'),
@@ -330,6 +332,38 @@ void main() {
       expect(find.text('The email or password did not match.'), findsOneWidget);
     });
 
+    testWidgets('the profile page shows the details and signs out', (
+      tester,
+    ) async {
+      final (accounts, _) = await open(tester);
+      accounts.info = (
+        guest: false,
+        email: 'me@example.com',
+        emailConfirmed: true,
+        pendingEmail: null,
+      );
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      expect(find.text('Profile'), findsWidgets);
+      expect(find.text('2,000 kcal'), findsOneWidget);
+      expect(find.text('170 cm'), findsOneWidget);
+      expect(find.text('70.0 kg'), findsOneWidget);
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Sign out'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Sign out'));
+      await tester.pumpAndSettle();
+      expect(accounts.calls, ['signout']);
+    });
+
+    testWidgets('a guest is warned before signing out', (tester) async {
+      await open(tester);
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Sign out'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('cannot be reopened'), findsOneWidget);
+    });
+
     testWidgets('a signed-in account can sign out', (tester) async {
       final (accounts, _) = await open(tester);
       accounts.info = (
@@ -340,7 +374,7 @@ void main() {
       );
       await tester.tap(find.byTooltip('Back'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Manage account'));
+      await tester.tap(find.byIcon(Icons.manage_accounts_outlined));
       await tester.pumpAndSettle();
       expect(find.text('Your account'), findsOneWidget);
       await tester.tap(find.text('Sign out'));

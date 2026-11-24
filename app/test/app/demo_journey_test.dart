@@ -100,7 +100,9 @@ void main() {
       // Progress and Settings.
       await tap(tester, destination('Progress'));
       expect(find.text('Intake and target'), findsOneWidget);
-      await tap(tester, find.byTooltip('Settings and profile'));
+      await tap(tester, find.byTooltip('Profile'));
+      expect(find.text('Demo on this device'), findsOneWidget);
+      await tap(tester, find.text('Settings and privacy'));
       expect(find.text('Profile & privacy'), findsOneWidget);
 
       // Clearing the demo returns to the welcome screen, and a fresh profile

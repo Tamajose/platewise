@@ -79,12 +79,9 @@ class IconTile extends StatelessWidget {
   final Color color, ink;
   @override
   Widget build(BuildContext context) => Container(
-    width: 42,
-    height: 42,
-    decoration: BoxDecoration(
-      color: color,
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Icon(icon, size: 22, color: ink),
+    width: 40,
+    height: 40,
+    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    child: Icon(icon, size: 20, color: ink),
   );
 }
