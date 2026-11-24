@@ -14,6 +14,13 @@ abstract interface class ComparisonRepository {
   /// be uploaded.
   Future<MealDraft> estimatePhoto(String? imagePath);
 
+  /// Suggests a planned-dish portion and recipe adjustments for [budget].
+  Future<DishRecommendation> recommendDish(
+    String dish,
+    String language,
+    int budget,
+  );
+
   /// A ready-made menu for trying the app, or null when this build offers none.
   List<MenuOption>? sampleMenu();
 }

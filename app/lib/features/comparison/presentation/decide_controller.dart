@@ -18,8 +18,13 @@ class DecideState {
     this.photos = const [null, null],
     this.useRemaining = true,
     this.budgetText = '',
+    this.dishText = '',
     this.result,
     this.resultBudget,
+    this.recommendation,
+    this.recommendationBudget,
+    this.recommendationBusy = false,
+    this.recommendationError,
     this.busy = false,
     this.error,
   });
@@ -30,8 +35,13 @@ class DecideState {
   /// Whether the budget is what is left of today's, not a typed amount.
   final bool useRemaining;
   final String budgetText;
+  final String dishText;
   final DecisionResult? result;
   final int? resultBudget;
+  final DishRecommendation? recommendation;
+  final int? recommendationBudget;
+  final bool recommendationBusy;
+  final String? recommendationError;
   final bool busy;
   final String? error;
 
@@ -43,18 +53,36 @@ class DecideState {
     List<Uint8List?>? photos,
     bool? useRemaining,
     String? budgetText,
+    String? dishText,
     DecisionResult? result,
     int? resultBudget,
+    DishRecommendation? recommendation,
+    int? recommendationBudget,
+    bool? recommendationBusy,
+    String? recommendationError,
     bool? busy,
     String? error,
     bool clearResult = false,
     bool clearError = false,
+    bool clearRecommendation = false,
+    bool clearRecommendationError = false,
   }) => DecideState(
     photos: photos ?? this.photos,
     useRemaining: useRemaining ?? this.useRemaining,
     budgetText: budgetText ?? this.budgetText,
+    dishText: dishText ?? this.dishText,
     result: clearResult ? null : result ?? this.result,
     resultBudget: clearResult ? null : resultBudget ?? this.resultBudget,
+    recommendation: clearRecommendation
+        ? null
+        : recommendation ?? this.recommendation,
+    recommendationBudget: clearRecommendation
+        ? null
+        : recommendationBudget ?? this.recommendationBudget,
+    recommendationBusy: recommendationBusy ?? this.recommendationBusy,
+    recommendationError: clearRecommendationError
+        ? null
+        : recommendationError ?? this.recommendationError,
     busy: busy ?? this.busy,
     error: clearError ? null : error ?? this.error,
   );
@@ -75,12 +103,24 @@ class DecideController extends Notifier<DecideState> {
     return const DecideState();
   }
 
-  void setBudgetText(String text) =>
-      state = state.copyWith(budgetText: text, clearResult: true);
+  void setBudgetText(String text) => state = state.copyWith(
+    budgetText: text,
+    clearResult: true,
+    clearRecommendation: true,
+    clearRecommendationError: true,
+  );
+
+  void setDishText(String text) => state = state.copyWith(
+    dishText: text,
+    clearRecommendation: true,
+    clearRecommendationError: true,
+  );
 
   void toggleBudgetMode() => state = state.copyWith(
     useRemaining: !state.useRemaining,
     clearResult: true,
+    clearRecommendation: true,
+    clearRecommendationError: true,
   );
 
   void addOption() {
@@ -123,6 +163,58 @@ class DecideController extends Notifier<DecideState> {
     }
     state = state.copyWith(photos: photos, clearResult: true);
     unawaited(_discard(ref.read(mediaStorageProvider), previous));
+  }
+
+  Future<void> recommendDish() async {
+    if (state.recommendationBusy) return;
+    final dish = state.dishText.trim();
+    if (dish.length < 2) {
+      state = state.copyWith(
+        recommendationError: 'Enter the dish you plan to cook.',
+        clearRecommendation: true,
+      );
+      return;
+    }
+    try {
+      final budget = _readBudget();
+      if (budget == null) {
+        throw const Failure(
+          'Set a positive meal budget before planning a dish.',
+        );
+      }
+      state = state.copyWith(
+        recommendationBusy: true,
+        clearRecommendation: true,
+        clearRecommendationError: true,
+      );
+      final language =
+          ref.read(overviewProvider).value?.profile?.language ?? 'en';
+      final recommendation = await ref
+          .read(comparisonRepositoryProvider)
+          .recommendDish(dish, language, budget);
+      if (!ref.mounted) return;
+      if (state.dishText.trim() != dish || _readBudget() != budget) {
+        state = state.copyWith(recommendationBusy: false);
+        return;
+      }
+      if (recommendation.range.high > budget) {
+        throw const Failure(
+          'The suggested portion did not fit this budget. No recommendation was applied.',
+        );
+      }
+      state = state.copyWith(
+        recommendation: recommendation,
+        recommendationBudget: budget,
+        recommendationBusy: false,
+      );
+    } on Object catch (e) {
+      if (ref.mounted) {
+        state = state.copyWith(
+          recommendationBusy: false,
+          recommendationError: failureMessage(e),
+        );
+      }
+    }
   }
 
   Future<void> comparePhotos() async {

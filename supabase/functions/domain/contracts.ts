@@ -71,11 +71,26 @@ export const profile = z.strictObject({
   preferred_language: language.default("en"),
   target_confirmed: z.boolean().default(false),
 });
+export const dishRecommendationInput = z.strictObject({
+  dish: z.string().trim().min(2).max(300),
+  language,
+  budget: z.number().int().min(1).max(5000),
+});
+export const dishRecommendationOutput = z.strictObject({
+  portion: z.string().trim().min(1).max(160),
+  adjustments: z.array(z.string().trim().min(1).max(160)).max(4),
+  calorie_low: boundedKcal,
+  calorie_high: boundedKcal,
+  confidence,
+  assumptions,
+}).refine((value) => value.calorie_high >= value.calorie_low, "Check calorie range.");
+
 export const actions = {
   capabilities: z.strictObject({}),
   dashboard: z.strictObject({}),
   update_profile: profile,
   analyze_text: z.strictObject({ description: z.string().trim().min(2).max(600), language }),
+  recommend_dish: dishRecommendationInput,
   analyze_photo: z.strictObject({ image_storage_path: photoPath }),
   confirm_meal: meal,
   edit_meal: meal,

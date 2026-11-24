@@ -109,6 +109,49 @@ Deno.test("low-confidence photos are blocked while text estimates remain availab
   assert.equal(result.confidence, "low");
 });
 
+Deno.test("planned-dish portions and recipe adjustments stay within budget", async () => {
+  const recommendation = {
+    portion: "One small bowl",
+    adjustments: ["Use less oil"],
+    calorie_low: 300,
+    calorie_high: 450,
+    confidence: "medium",
+    assumptions: ["Prepared with moderate oil"],
+  };
+  const { calls, network } = recorder(recommendation);
+  const ai = createAiProviders(
+    environment({ OPENAI_API_KEY: "local-test-value", PLATEWISE_TEXT_MODEL: "fixture-model" }),
+    network,
+  );
+  const result = await ai.recommendDish("Vegetable curry", "en", 500);
+  assert.equal(result.calorie_high, 450);
+  const body = calls[0].body as Record<string, any>;
+  assert.match(body.messages[0].content, /high estimate must be no greater than/);
+  assert.deepEqual(JSON.parse(body.messages[1].content), {
+    language: "en",
+    dish: "Vegetable curry",
+    budget: 500,
+  });
+
+  const overBudget = createAiProviders(
+    environment({ OPENAI_API_KEY: "local-test-value", PLATEWISE_TEXT_MODEL: "fixture-model" }),
+    recorder({ ...recommendation, calorie_high: 501 }).network,
+  );
+  await assert.rejects(
+    overBudget.recommendDish("Vegetable curry", "en", 500),
+    (error: ApiError) => error.code === "NO_FITTING_RECOMMENDATION",
+  );
+
+  const uncertain = createAiProviders(
+    environment({ OPENAI_API_KEY: "local-test-value", PLATEWISE_TEXT_MODEL: "fixture-model" }),
+    recorder({ ...recommendation, confidence: "low" }).network,
+  );
+  await assert.rejects(
+    uncertain.recommendDish("Unclear curry", "en", 500),
+    (error: ApiError) => error.code === "LOW_CONFIDENCE_RECOMMENDATION",
+  );
+});
+
 Deno.test("json mode puts the schema in the prompt and still validates the reply", async () => {
   const { calls, network } = recorder({
     items: [{ ...food, calorie_low: 500 }],

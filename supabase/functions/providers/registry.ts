@@ -126,6 +126,8 @@ export function createAiProviders(
     analyzePhoto: (image: ImageInput) => visionAdapter.analyzePhoto(image),
     extractMenu: (image: ImageInput) => visionAdapter.extractMenu(image),
     analyzeText: (value: string, language: Language) => textAdapter.analyzeText(value, language),
+    recommendDish: (value: string, language: Language, budget: number) =>
+      textAdapter.recommendDish(value, language, budget),
     chooseFacts: (facts) => textAdapter.chooseFacts(facts),
     transcribe: (audio: File, language: Language) => speechAdapter.transcribe(audio, language),
   };

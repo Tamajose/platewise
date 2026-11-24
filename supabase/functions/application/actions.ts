@@ -104,6 +104,24 @@ export async function run<A extends ActionName>(
         () => ai.analyzeText(text, p.language),
       );
     }
+    case "recommend_dish": {
+      const p = input as z.infer<typeof actions.recommend_dish>;
+      if (p.language === "bn" && !flags.banglaText) {
+        fail(
+          "LANGUAGE_UNAVAILABLE",
+          "Live Bangla dish planning is unavailable. Enter the dish in English.",
+        );
+      }
+      const dish = redact(p.dish);
+      return await cached(
+        session,
+        ai,
+        "text",
+        action,
+        JSON.stringify([p.language, dish, p.budget]),
+        () => ai.recommendDish(dish, p.language, p.budget),
+      );
+    }
     case "analyze_photo": {
       const p = input as z.infer<typeof actions.analyze_photo>;
       const image = await privateImage(session, p.image_storage_path);
