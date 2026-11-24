@@ -52,8 +52,6 @@ class WaterQuickAdd extends ConsumerWidget {
     final state = ref.watch(waterControllerProvider);
     final amount = day.waterMl;
     return Surface(
-      color: PlateColors.water,
-      border: const Color(0xFFD4E7E9),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -61,7 +59,7 @@ class WaterQuickAdd extends ConsumerWidget {
             children: [
               const IconTile(
                 Icons.water_drop_outlined,
-                color: Colors.white,
+                color: PlateColors.water,
                 ink: PlateColors.blue,
               ),
               const SizedBox(width: 9),
@@ -101,7 +99,7 @@ class WaterQuickAdd extends ConsumerWidget {
               minHeight: 7,
               semanticsLabel: '$amount of $goal milliliters logged',
               color: PlateColors.blue,
-              backgroundColor: const Color(0xFFCADFE5),
+              backgroundColor: PlateColors.line,
             ),
           ),
           const SizedBox(height: 10),

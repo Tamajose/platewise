@@ -221,6 +221,28 @@ void main() {
       expect(find.byType(NavigationBar), findsNothing);
     });
 
+    testWidgets('the side rail can be folded to icons and opened again', (
+      tester,
+    ) async {
+      await show(tester, overview(), width: 1300);
+      expect(
+        tester.widget<NavigationRail>(find.byType(NavigationRail)).extended,
+        isTrue,
+      );
+      await tester.tap(find.byTooltip('Collapse sidebar'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<NavigationRail>(find.byType(NavigationRail)).extended,
+        isFalse,
+      );
+      await tester.tap(find.byTooltip('Expand sidebar'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<NavigationRail>(find.byType(NavigationRail)).extended,
+        isTrue,
+      );
+    });
+
     testWidgets('a failed start shows the reason and retries', (tester) async {
       tester.view.physicalSize = const Size(700, 2400);
       tester.view.devicePixelRatio = 1;

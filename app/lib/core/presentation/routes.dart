@@ -13,6 +13,9 @@ abstract final class Routes {
   static const settings = '/settings';
   static const water = '/water';
   static const profile = '/profile';
+
+  /// The person's own page: details, account and sign out.
+  static const me = '/me';
   static const account = '/account';
   static const energy = '/energy';
   static const credits = '/credits';

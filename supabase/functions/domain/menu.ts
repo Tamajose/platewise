@@ -12,6 +12,41 @@ export const menuOutput = z.strictObject({
 export type MenuExtraction = z.infer<typeof menuOutput>;
 
 /**
+ * What a model may reply with. Real menus are long and models leave out empty
+ * fields, so this accepts more than [menuOutput] and [fitMenuReply] tightens it.
+ */
+export const menuReply = z.object({
+  options: z.array(z.object({
+    name: z.string(),
+    portion: z.string().nullish(),
+    printed_kcal: z.number().nullish(),
+    calorie_evidence: z.string().nullish(),
+  })),
+});
+
+/** Turns a loose reply into the strict shape, dropping what does not fit. */
+export function fitMenuReply(reply: z.infer<typeof menuReply>): MenuExtraction {
+  const text = (value: string | null | undefined, max: number) => {
+    const t = (value ?? "").trim().slice(0, max);
+    return t.length > 0 ? t : null;
+  };
+  return {
+    options: reply.options
+      .map((row) => ({
+        name: text(row.name, 100),
+        portion: text(row.portion, 100),
+        printed_kcal: row.printed_kcal != null && Number.isInteger(row.printed_kcal) &&
+            row.printed_kcal >= 15 && row.printed_kcal <= 6000
+          ? row.printed_kcal
+          : null,
+        calorie_evidence: text(row.calorie_evidence, 120),
+      }))
+      .filter((row): row is MenuExtraction["options"][number] => row.name !== null)
+      .slice(0, 18),
+  };
+}
+
+/**
  * Treats a model's menu reading as untrusted. A calorie value counts only when
  * the quoted evidence names that same number as kcal or calories, and prices
  * never do.

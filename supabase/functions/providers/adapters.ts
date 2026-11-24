@@ -7,7 +7,7 @@ import {
   modelEstimate,
   redact,
 } from "../domain/contracts.ts";
-import { menuOutput, normalizeMenu } from "../domain/menu.ts";
+import { fitMenuReply, menuReply, normalizeMenu } from "../domain/menu.ts";
 import type {
   ExplanationProvider,
   ImageInput,
@@ -51,12 +51,18 @@ export class VisionAdapter implements MealVisionProvider, MenuExtractionProvider
 
   async extractMenu(image: ImageInput) {
     return normalizeMenu(
-      await this.client.structured(
-        this.model,
-        "menu_options",
-        menuPolicy,
-        this.client.imageContent(image.bytes, image.mime, "Read the visible menu only."),
-        menuOutput,
+      fitMenuReply(
+        await this.client.structured(
+          this.model,
+          "menu_options",
+          menuPolicy,
+          this.client.imageContent(
+            image.bytes,
+            image.mime,
+            "Read the visible menu only. List at most 18 dishes.",
+          ),
+          menuReply,
+        ),
       ),
     );
   }

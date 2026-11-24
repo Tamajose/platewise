@@ -21,8 +21,8 @@ class PageScroll extends StatelessWidget {
     child: LayoutBuilder(
       builder: (context, constraints) {
         final insets = constraints.maxWidth >= 720
-            ? const EdgeInsets.fromLTRB(32, 30, 32, 36)
-            : const EdgeInsets.fromLTRB(18, 18, 18, 26);
+            ? const EdgeInsets.fromLTRB(40, 36, 40, 48)
+            : const EdgeInsets.fromLTRB(20, 20, 20, 32);
         final list = ListView(
           padding: padding ?? insets,
           physics: onRefresh == null
@@ -41,9 +41,18 @@ class PageScroll extends StatelessWidget {
             ),
           ],
         );
-        return onRefresh == null
+        final page = onRefresh == null
             ? list
             : RefreshIndicator(onRefresh: onRefresh!, child: list);
+        // Each screen eases in, so changing tabs feels continuous.
+        return TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: 1),
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+          builder: (context, value, child) =>
+              Opacity(opacity: value, child: child),
+          child: page,
+        );
       },
     ),
   );
@@ -130,18 +139,20 @@ class Surface extends StatelessWidget {
     super.key,
     required this.child,
     this.color = PlateColors.surface,
-    this.padding = const EdgeInsets.all(16),
+    this.padding = const EdgeInsets.all(18),
     this.border = PlateColors.line,
   });
   final Widget child;
   final Color color, border;
   final EdgeInsets padding;
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => AnimatedContainer(
+    duration: const Duration(milliseconds: 220),
+    curve: Curves.easeOutCubic,
     padding: padding,
     decoration: BoxDecoration(
       color: color,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(18),
       border: Border.all(color: border),
     ),
     child: child,

@@ -35,8 +35,8 @@ const _destinations = [
 ];
 
 /// The frame around the four main screens: a bottom bar on narrow screens and
-/// a side rail on wide ones.
-class AppShell extends ConsumerWidget {
+/// a side rail on wide ones. The rail folds down to icons.
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key, required this.path, required this.child});
 
   /// The current route, which picks the highlighted destination.
@@ -44,13 +44,20 @@ class AppShell extends ConsumerWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends ConsumerState<AppShell> {
+  bool collapsed = false;
+
+  @override
+  Widget build(BuildContext context) {
     final demo = ref.watch(sessionRepositoryProvider).isDemo;
     final wide =
         MediaQuery.sizeOf(context).width >= 1000 &&
         MediaQuery.textScalerOf(context).scale(14) <= 20;
     final selected = _destinations
-        .indexWhere((item) => item.path == path)
+        .indexWhere((item) => item.path == widget.path)
         .clamp(0, _destinations.length - 1);
     void go(int index) => context.go(_destinations[index].path);
 
@@ -65,8 +72,8 @@ class AppShell extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.only(right: 9),
                   child: IconButton(
-                    onPressed: () => context.push(Routes.settings),
-                    tooltip: 'Settings and profile',
+                    onPressed: () => context.push(Routes.me),
+                    tooltip: 'Profile',
                     icon: const Icon(Icons.account_circle_outlined),
                   ),
                 ),
@@ -78,27 +85,79 @@ class AppShell extends ConsumerWidget {
             SafeArea(
               right: false,
               child: NavigationRail(
-                extended: true,
-                minExtendedWidth: 192,
+                extended: !collapsed,
+                minExtendedWidth: 224,
+                minWidth: 76,
                 scrollable: true,
                 backgroundColor: PlateColors.surface,
                 indicatorColor: PlateColors.sage,
-                leading: const Padding(
-                  padding: EdgeInsets.fromLTRB(18, 14, 18, 24),
-                  child: SizedBox(width: 156, child: Wordmark()),
+                indicatorShape: const StadiumBorder(),
+                leading: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 14, 12, 18),
+                  child: Builder(
+                    builder: (context) {
+                      final toggle = IconButton(
+                        onPressed: () => setState(() => collapsed = !collapsed),
+                        tooltip: collapsed
+                            ? 'Expand sidebar'
+                            : 'Collapse sidebar',
+                        icon: Icon(
+                          collapsed
+                              ? Icons.keyboard_double_arrow_right_rounded
+                              : Icons.keyboard_double_arrow_left_rounded,
+                        ),
+                      );
+                      return !collapsed
+                          ? SizedBox(
+                              width: 200,
+                              child: Row(
+                                children: [
+                                  const Expanded(child: Wordmark()),
+                                  toggle,
+                                ],
+                              ),
+                            )
+                          : Column(
+                              children: [
+                                const Wordmark(),
+                                const SizedBox(height: 10),
+                                toggle,
+                              ],
+                            );
+                    },
+                  ),
                 ),
                 trailingAtBottom: true,
                 trailing: Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 12, 18, 20),
-                  child: Column(
-                    children: [
-                      if (demo) const IndicatorTag('Demo mode'),
-                      TextButton.icon(
-                        onPressed: () => context.push(Routes.settings),
-                        icon: const Icon(Icons.account_circle_outlined),
-                        label: const Text('Settings'),
-                      ),
-                    ],
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 20),
+                  child: Builder(
+                    builder: (context) {
+                      final open = !collapsed;
+                      return Column(
+                        children: [
+                          if (demo && open) const IndicatorTag('Demo mode'),
+                          const SizedBox(height: 6),
+                          open
+                              ? SizedBox(
+                                  width: 200,
+                                  child: TextButton.icon(
+                                    onPressed: () => context.push(Routes.me),
+                                    icon: const Icon(
+                                      Icons.account_circle_outlined,
+                                    ),
+                                    label: const Text('Profile'),
+                                  ),
+                                )
+                              : IconButton(
+                                  onPressed: () => context.push(Routes.me),
+                                  tooltip: 'Profile',
+                                  icon: const Icon(
+                                    Icons.account_circle_outlined,
+                                  ),
+                                ),
+                        ],
+                      );
+                    },
                   ),
                 ),
                 selectedIndex: selected,
@@ -115,27 +174,22 @@ class AppShell extends ConsumerWidget {
             ),
             const VerticalDivider(width: 1),
           ],
-          Expanded(key: const ValueKey('active-screen'), child: child),
+          Expanded(key: const ValueKey('active-screen'), child: widget.child),
         ],
       ),
       bottomNavigationBar: wide
           ? null
-          : DecoratedBox(
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: PlateColors.line)),
-              ),
-              child: NavigationBar(
-                selectedIndex: selected,
-                onDestinationSelected: go,
-                destinations: [
-                  for (final item in _destinations)
-                    NavigationDestination(
-                      icon: Icon(item.icon),
-                      selectedIcon: Icon(item.selected),
-                      label: item.label,
-                    ),
-                ],
-              ),
+          : NavigationBar(
+              selectedIndex: selected,
+              onDestinationSelected: go,
+              destinations: [
+                for (final item in _destinations)
+                  NavigationDestination(
+                    icon: Icon(item.icon),
+                    selectedIcon: Icon(item.selected),
+                    label: item.label,
+                  ),
+              ],
             ),
     );
   }

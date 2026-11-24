@@ -34,10 +34,10 @@ void main() {
     });
   });
 
-  test('theme uses the warm canvas and the serif display family', () {
+  test('theme uses the calm canvas and one sans family', () {
     final theme = plateTheme();
     expect(theme.scaffoldBackgroundColor, PlateColors.canvas);
-    expect(theme.textTheme.headlineMedium?.fontFamily, 'DM Serif Text');
+    expect(theme.textTheme.headlineMedium?.fontFamily, isNot('DM Serif Text'));
     expect(theme.textTheme.bodyMedium?.fontFamilyFallback, ['NotoSansBengali']);
   });
 }

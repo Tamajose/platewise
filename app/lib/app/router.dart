@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/presentation/review_args.dart';
 import '../core/presentation/routes.dart';
 import '../features/auth/presentation/account_screen.dart';
+import '../features/auth/presentation/me_screen.dart';
 import '../features/comparison/presentation/decide_screen.dart';
 import '../features/comparison/presentation/menu_review_args.dart';
 import '../features/comparison/presentation/menu_review_screen.dart';
@@ -24,6 +26,32 @@ import '../features/water/presentation/water_screen.dart';
 import 'gate.dart';
 import 'shell.dart';
 
+/// Switching between the main screens fades and lifts the new one into place,
+/// so the frame around them stays still.
+Page<void> _tab(GoRouterState state, Widget child) =>
+    CustomTransitionPage<void>(
+      key: state.pageKey,
+      child: child,
+      transitionDuration: const Duration(milliseconds: 260),
+      reverseTransitionDuration: const Duration(milliseconds: 160),
+      transitionsBuilder: (context, animation, _, child) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+        );
+        return FadeTransition(
+          opacity: curved,
+          child: SlideTransition(
+            position: Tween(
+              begin: const Offset(0, .02),
+              end: Offset.zero,
+            ).animate(curved),
+            child: child,
+          ),
+        );
+      },
+    );
+
 /// Maps each route path to a screen. Screens navigate by path, so this is the
 /// one place that knows which feature shows what.
 final routerProvider = Provider<GoRouter>((ref) {
@@ -43,16 +71,25 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: Routes.today,
-            builder: (_, _) => TodayScreen(
-              waterQuickAdd: (log, goal) =>
-                  WaterQuickAdd(log, goal, compact: true),
+            pageBuilder: (_, state) => _tab(
+              state,
+              TodayScreen(
+                waterQuickAdd: (log, goal) =>
+                    WaterQuickAdd(log, goal, compact: true),
+              ),
             ),
           ),
-          GoRoute(path: Routes.decide, builder: (_, _) => const DecideScreen()),
-          GoRoute(path: Routes.nearby, builder: (_, _) => const NearbyScreen()),
+          GoRoute(
+            path: Routes.decide,
+            pageBuilder: (_, state) => _tab(state, const DecideScreen()),
+          ),
+          GoRoute(
+            path: Routes.nearby,
+            pageBuilder: (_, state) => _tab(state, const NearbyScreen()),
+          ),
           GoRoute(
             path: Routes.progress,
-            builder: (_, _) => const ProgressScreen(),
+            pageBuilder: (_, state) => _tab(state, const ProgressScreen()),
           ),
         ],
       ),
@@ -69,6 +106,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => ReviewScreen(state.extra! as ReviewArgs),
       ),
       GoRoute(path: Routes.water, builder: (_, _) => const WaterScreen()),
+      GoRoute(path: Routes.me, builder: (_, _) => const MeScreen()),
       GoRoute(path: Routes.profile, builder: (_, _) => const ProfileScreen()),
       GoRoute(path: Routes.energy, builder: (_, _) => const EnergyScreen()),
       GoRoute(path: Routes.credits, builder: (_, _) => const CreditsScreen()),

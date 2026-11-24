@@ -16,10 +16,7 @@ class SectionTitle extends StatelessWidget {
           Expanded(
             child: Semantics(
               header: true,
-              child: Text(
-                title,
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
+              child: Text(title, style: Theme.of(context).textTheme.titleLarge),
             ),
           ),
           ?trailing,
@@ -58,9 +55,13 @@ class PageHeading extends StatelessWidget {
         if (eyebrow != null) ...[
           Text(
             eyebrow!,
-            style: t.labelLarge?.copyWith(color: PlateColors.forest),
+            style: t.bodySmall?.copyWith(
+              color: PlateColors.muted,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1,
+            ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
         ],
         Semantics(
           container: true,

@@ -325,6 +325,32 @@ Deno.test("Gemini photos use a data URI without an image detail field", async ()
   assert.equal("detail" in image, false);
 });
 
+Deno.test("a loose menu reading is accepted and tidied rather than failing validation", async () => {
+  const dishes = Array.from({ length: 25 }, (_, i) => ({ name: "Dish " + i }));
+  const { network } = recorder({
+    options: [
+      { name: "Dal", printed_kcal: 320, calorie_evidence: "320 kcal" },
+      { name: "Fish curry", portion: null, printed_kcal: 12.5, calorie_evidence: "12.5 kcal" },
+      { name: "  ", portion: "1 cup" },
+      ...dishes,
+    ],
+  });
+  const ai = createAiProviders(
+    environment({ PLATEWISE_AI_PROVIDER: "gemini", GEMINI_API_KEY: "g" }),
+    network,
+  );
+  const { options } = await ai.extractMenu({ bytes: new Uint8Array([1, 2]), mime: "image/jpeg" });
+  assert.equal(options.length, 18);
+  assert.deepEqual(options[0], {
+    name: "Dal",
+    portion: null,
+    printed_kcal: 320,
+    calorie_evidence: "320 kcal",
+  });
+  assert.equal(options[1].printed_kcal, null);
+  assert.equal(options[2].name, "Dish 0");
+});
+
 /** A network that answers Gemini's generateContent with [text], and records the request. */
 function geminiSpeech(answer: unknown) {
   const calls: { url: string; headers: Headers; body: Record<string, any> }[] = [];
