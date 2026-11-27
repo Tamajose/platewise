@@ -5,11 +5,12 @@ import { assertAvailable } from "../application/privacy.ts";
 import { env, readFlags } from "../infra/config.ts";
 import { authenticate } from "../infra/supabase.ts";
 import { cors, readLimited, response } from "../infra/web.ts";
+import { createPhoneProvider } from "../providers/applink.ts";
 import { createAiProviders } from "../providers/registry.ts";
 
 /** Builds the services the application uses from the environment. */
 export function createServices(get: (name: string) => string | undefined = env): Services {
-  return { ai: createAiProviders(get), flags: readFlags(get) };
+  return { ai: createAiProviders(get), flags: readFlags(get), phone: createPhoneProvider(get) };
 }
 
 /**
