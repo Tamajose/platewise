@@ -62,10 +62,24 @@ export interface Flags {
   readonly banglaSpeech: boolean;
 }
 
+/** Phone verification through a carrier OTP service. */
+export interface PhoneProvider {
+  /** Whether the application credentials are configured. */
+  available(): boolean;
+  /** Sends an OTP to a tel: address. The reference stays server-side. */
+  requestOtp(subscriberId: string): Promise<{ referenceNo: string }>;
+  /** Verifies the code; the platform activates the subscription on success. */
+  verifyOtp(
+    referenceNo: string,
+    otp: string,
+  ): Promise<{ subscriberId: string; subscriptionStatus: string }>;
+}
+
 /** What the application receives from the composition root. */
 export interface Services {
   readonly ai: AiProviders;
   readonly flags: Flags;
+  readonly phone: PhoneProvider;
 }
 
 /** Menu rows from a seeded dataset of fictional venues. */
