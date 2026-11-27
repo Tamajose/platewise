@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { ApiError } from "../domain/contracts.ts";
-import { createPhoneProvider } from "./applink.ts";
+import { createPhoneProvider, createSubscriptionProvider } from "./applink.ts";
 
 const environment = (values: Record<string, string | undefined>) => (name: string) => values[name];
 
@@ -101,5 +101,31 @@ Deno.test("an unconfigured provider refuses locally", async () => {
     () => phone.requestOtp("tel:8801416177301"),
     (error: unknown) =>
       error instanceof ApiError && error.code === "PHONE_UNAVAILABLE" && error.status === 503,
+  );
+});
+
+Deno.test("unregister posts action 0 to the subscription endpoint", async () => {
+  const { calls, network } = recorder({ statusCode: "S1000", subscriptionStatus: "UNREGISTERED." });
+  const subscriptions = createSubscriptionProvider(environment(config), network);
+  assert.equal(subscriptions.available(), true);
+  assert.deepEqual(await subscriptions.unregister("+880 1416-177301"), {
+    subscriptionStatus: "UNREGISTERED.",
+  });
+  assert.equal(calls[0].url, "https://api.applink.com.bd/subscription/send");
+  assert.deepEqual(calls[0].body, {
+    applicationId: "APP_000001",
+    password: "local-test-value",
+    subscriberId: "tel:8801416177301",
+    action: "0",
+  });
+});
+
+Deno.test("an unconfigured subscription provider refuses locally", async () => {
+  const subscriptions = createSubscriptionProvider(environment({}), recorder({}).network);
+  assert.equal(subscriptions.available(), false);
+  await assert.rejects(
+    () => subscriptions.unregister("tel:8801416177301"),
+    (error: unknown) =>
+      error instanceof ApiError && error.code === "SUBSCRIPTION_UNAVAILABLE" && error.status === 503,
   );
 });
