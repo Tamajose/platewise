@@ -1,4 +1,5 @@
 import { ApiError } from "../domain/contracts.ts";
+import { isOptOut, parseSmsMessage } from "../domain/sms_message.ts";
 import { secretsMatch } from "../domain/subscription_event.ts";
 import { readLimited } from "../infra/web.ts";
 
@@ -8,6 +9,10 @@ export type SmsServices = {
   token: () => string | undefined;
   /** The application id the message must carry, when configured. */
   appId?: () => string | undefined;
+  /** Opts a subscriber out. Runs after the acknowledgement, never before it. */
+  unregister?: (subscriberId: string) => Promise<{ subscriptionStatus: string }>;
+  /** Runs work after the response. Defaults to EdgeRuntime.waitUntil when present. */
+  schedule?: (work: Promise<unknown>) => void;
 };
 
 const limit = 16 * 1024;
@@ -21,13 +26,20 @@ const reply = (status: number, body: Record<string, unknown>) =>
 /** Applink expects this exact acknowledgement for every MO message. */
 const acknowledged = () => reply(200, { statusCode: "S1000", statusDetail: "Success" });
 
+/** Continues work after the response on a host that supports it. */
+function background(work: Promise<unknown>) {
+  const runtime = (globalThis as { EdgeRuntime?: { waitUntil?: (promise: Promise<unknown>) => void } })
+    .EdgeRuntime;
+  if (runtime?.waitUntil) runtime.waitUntil(work);
+}
+
 /**
  * Receives inbound MO SMS from Applink. The address must carry the shared secret
  * as `?token=`. The body is acknowledged immediately and never logged, because an
  * MO message is private communication.
  *
- * MO processing (STOP / UNSUB / OFF) is not wired yet: this acknowledges and
- * discards, which satisfies provisioning without acting on a single SMS.
+ * A STOP, UNSUB or OFF message opts the subscriber out through the subscription
+ * service after the acknowledgement. Nothing else in a message is acted on.
  */
 export function createSmsHandler(services: SmsServices) {
   return async (request: Request) => {
@@ -47,12 +59,21 @@ export function createSmsHandler(services: SmsServices) {
       } catch {
         return acknowledged();
       }
+      const message = parseSmsMessage(json);
+      if (!message) return acknowledged();
       const expectedApp = services.appId?.();
-      const appId = typeof json === "object" && json !== null
-        ? (json as { applicationId?: unknown }).applicationId
-        : undefined;
-      if (expectedApp && typeof appId === "string" && appId !== expectedApp) {
-        return acknowledged();
+      if (expectedApp && message.applicationId !== expectedApp) return acknowledged();
+      if (isOptOut(message.message) && services.unregister) {
+        const work = services.unregister(message.sourceAddress).then(
+          (result) => {
+            const status = result.subscriptionStatus.trim().replace(/\.+$/, "").toUpperCase();
+            console.info("sms_opt_out", id, status);
+          },
+          (error) => {
+            console.error("sms_opt_out_failed", id, error instanceof ApiError ? error.code : "unknown");
+          },
+        );
+        (services.schedule ?? background)(work);
       }
       return acknowledged();
     } catch (error) {

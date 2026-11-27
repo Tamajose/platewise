@@ -75,6 +75,14 @@ export interface PhoneProvider {
   ): Promise<{ subscriberId: string; subscriptionStatus: string }>;
 }
 
+/** Subscription changes through the carrier's subscription service. */
+export interface SubscriptionProvider {
+  /** Whether the application credentials are configured. */
+  available(): boolean;
+  /** Opts the subscriber out; the desired state holds whether or not it was registered. */
+  unregister(subscriberId: string): Promise<{ subscriptionStatus: string }>;
+}
+
 /** What the application receives from the composition root. */
 export interface Services {
   readonly ai: AiProviders;

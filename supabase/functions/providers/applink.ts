@@ -1,5 +1,5 @@
 import { ApiError } from "../domain/contracts.ts";
-import type { PhoneProvider } from "../domain/ports.ts";
+import type { PhoneProvider, SubscriptionProvider } from "../domain/ports.ts";
 
 type Get = (name: string) => string | undefined;
 
@@ -61,12 +61,7 @@ async function post(
       signal: AbortSignal.timeout(timeout),
     });
   } catch {
-    throw new ApiError(
-      "PHONE_UNAVAILABLE",
-      "Phone verification could not be reached. Try again.",
-      502,
-      true,
-    );
+    throw new ApiError("APPLINK_UNAVAILABLE", "Applink could not be reached. Try again.", 502, true);
   }
   let reply: Reply;
   try {
@@ -74,23 +69,18 @@ async function post(
   } catch {
     if (response.status === 403) {
       throw new ApiError(
-        "PHONE_UNAVAILABLE",
+        "APPLINK_UNAVAILABLE",
         "The Applink relay rejected the request. Check APPLINK_RELAY_TOKEN.",
         503,
       );
     }
-    throw new ApiError(
-      "PHONE_UNAVAILABLE",
-      "Phone verification returned an unreadable reply.",
-      502,
-      true,
-    );
+    throw new ApiError("APPLINK_UNAVAILABLE", "Applink returned an unreadable reply.", 502, true);
   }
   const code = typeof reply.statusCode === "string" ? reply.statusCode : "";
   if (code !== "S1000") {
     const detail = stringField(reply, "statusDetail").slice(0, 200) ||
-      "Phone verification failed. Try again.";
-    throw new ApiError(code || "PHONE_UNAVAILABLE", detail, statusFor(code), transient(code));
+      "Applink request failed. Try again.";
+    throw new ApiError(code || "APPLINK_UNAVAILABLE", detail, statusFor(code), transient(code));
   }
   return reply;
 }
@@ -137,6 +127,37 @@ export function createPhoneProvider(
         throw new ApiError("INVALID_RESPONSE", "Phone verification did not return a subscriber.", 502);
       }
       return { subscriberId, subscriptionStatus: stringField(reply, "subscriptionStatus") };
+    },
+  };
+}
+
+/**
+ * Subscription changes through Applink. Unregister posts action "0" to
+ * `/subscription/send`; the desired state is UNREGISTERED whether or not the
+ * subscriber was registered before, so a repeat is still success.
+ */
+export function createSubscriptionProvider(
+  get: Get,
+  network: typeof fetch = fetch,
+  timeout = timeoutMs,
+): SubscriptionProvider {
+  const config = readConfig(get);
+  const unavailable = () =>
+    Promise.reject(
+      new ApiError("SUBSCRIPTION_UNAVAILABLE", "Subscription changes are unavailable here.", 503),
+    );
+  return {
+    available: () => config !== null,
+    async unregister(subscriberId) {
+      if (!config) return unavailable();
+      const reply = await post(
+        config,
+        "/subscription/send",
+        { subscriberId: subscriberAddress(subscriberId), action: "0" },
+        network,
+        timeout,
+      );
+      return { subscriptionStatus: stringField(reply, "subscriptionStatus") };
     },
   };
 }
