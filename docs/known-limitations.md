@@ -30,9 +30,12 @@ AI features need an authorized provider key and current model availability. Two 
 
 ## Accounts, data and cleanup
 
+- **Data export permission lives on the device.** The switch under Data and privacy only gates the export screen on this device. The server does not check it, and it resets when app data is erased. A saved file leaves the app's protection. On the web the browser downloads it. On other platforms it goes to the downloads folder where there is one, and to the app's documents folder otherwise, which is hard to reach on a phone, so Copy to clipboard is also offered. The SQL function `pw_export` has no database test yet, and the Android and iOS save paths have not been tried on a device.
 A Supabase project and Auth configuration enable private hosted data and email linking. Email verification, custom SMTP and redirect addresses need to be set up and tried on a hosted project. An anonymous user who switches to another account can lose device access to their old guest session, and merging identities is excluded. Inactive anonymous accounts need a deployment-level retention policy.
 
 Hosted cleanup needs an operator-scheduled job. A discarded draft photo is removed on normal exit when possible, and unfinished uploads become candidates for removal after 24 hours. Raw speech is held in temporary local storage while recording, deleted after the request, and never stored in cloud object storage. Abrupt device termination can leave temporary local data until the operating system clears it.
+
+- **Subscription messages are untested against Banglalink.** The `subscription-notify` function accepts any JSON object, because the notification format is not documented in the pages we read, and answers `S1000` as an assumed success reply. It is protected only by a secret in the address, since the messages are not signed. It stores phone numbers in `subscription_events`, which has no retention rule or link to the delete-data flow yet.
 
 ## Maps and venues
 

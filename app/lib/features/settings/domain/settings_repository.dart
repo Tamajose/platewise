@@ -1,5 +1,6 @@
 import '../../../core/domain/profile.dart';
 import 'energy.dart';
+import 'stats_export.dart';
 
 abstract interface class SettingsRepository {
   /// Turns correction contributions on or off. Turning them off removes the
@@ -17,6 +18,10 @@ abstract interface class SettingsRepository {
     String coefficient,
     String activity,
   );
+
+  /// The statistics for the last [days] days, or fewer when older days hold
+  /// no records. [days] is 7 to 365.
+  Future<StatsExport> exportStats(int days);
 
   /// Deletes the person's data, and their account when [account] is true.
   Future<void> eraseData({required bool account});

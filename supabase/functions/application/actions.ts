@@ -44,6 +44,7 @@ export const actions = {
   compare: compareInput,
   weekly: z.strictObject({}),
   weekly_summary: z.strictObject({}),
+  export_stats: z.strictObject({ days: z.number().int().min(7).max(365) }),
   log_water: waterInput,
   edit_water: editWaterInput,
   delete_water: z.strictObject({ id: uuid }),
@@ -135,6 +136,10 @@ export async function run<A extends ActionName>(
       const p = input as z.infer<typeof actions.analyze_photo>;
       const image = await privateImage(session, p.image_storage_path);
       return await cached(session, ai, "vision", action, image.bytes, () => ai.analyzePhoto(image));
+    }
+    case "export_stats": {
+      const p = input as z.infer<typeof actions.export_stats>;
+      return await rpc(client, "pw_export", { p_days: p.days });
     }
     case "weekly":
       return weekly(await rpc<Overview>(client, "pw_overview"));

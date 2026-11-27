@@ -9,6 +9,7 @@ import '../../../core/presentation/routes.dart';
 import '../../../core/presentation/session_state.dart';
 import '../../../core/theme/plate_theme.dart';
 import '../../../core/widgets/widgets.dart';
+import '../data/export_providers.dart';
 import 'settings_controller.dart';
 
 /// Profile summary, account, language, privacy and data deletion.
@@ -219,6 +220,30 @@ class SettingsScreen extends ConsumerWidget {
                                 child: const Text('Submit a food correction'),
                               ),
                           ],
+                          Material(
+                            type: MaterialType.transparency,
+                            child: SwitchListTile(
+                              value:
+                                  ref.watch(exportPermissionProvider).value ??
+                                  false,
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text('Allow data export'),
+                              subtitle: const Text(
+                                'Lets this device save your daily stats as a file. Off by default, and you can turn it off at any time.',
+                              ),
+                              onChanged: busy
+                                  ? null
+                                  : (on) => ref
+                                        .read(exportPermissionProvider.notifier)
+                                        .set(on),
+                            ),
+                          ),
+                          if (ref.watch(exportPermissionProvider).value ??
+                              false)
+                            TextButton(
+                              onPressed: () => context.push(Routes.export),
+                              child: const Text('Export my stats'),
+                            ),
                           if (value.pendingAssets > 0)
                             SecondaryButton(
                               'Retry photo cleanup',

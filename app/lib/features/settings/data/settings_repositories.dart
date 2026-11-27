@@ -1,9 +1,11 @@
 import '../../../core/data/api/api_client.dart';
 import '../../../core/data/demo/demo_store.dart';
+import '../../../core/data/mappers/overview_mapper.dart';
 import '../../../core/domain/domain.dart';
 import '../domain/energy.dart';
 import '../domain/settings_repository.dart';
 import '../domain/settings_rules.dart';
+import '../domain/stats_export.dart';
 
 class LiveSettingsRepository implements SettingsRepository {
   LiveSettingsRepository(this._api, {required this.signOutLocally});
@@ -52,6 +54,21 @@ class LiveSettingsRepository implements SettingsRepository {
   }
 
   @override
+  Future<StatsExport> exportStats(int days) async {
+    final data = await _api.call('export_stats', {'days': days});
+    final overview = overviewFromJson(data);
+    if (overview.profile == null) {
+      throw const Failure('Set up your profile before exporting statistics.');
+    }
+    return StatsExport(
+      overview: overview,
+      requestedDays: days,
+      days: data['days'] as int,
+      availableDays: data['available_days'] as int,
+    );
+  }
+
+  @override
   Future<void> eraseData({required bool account}) async {
     await _api.call(account ? 'delete_account' : 'delete_data');
     if (account) {
@@ -96,6 +113,15 @@ class DemoSettingsRepository implements SettingsRepository {
       throw const Failure('The pilot formula supports ages 19 to 78.');
     }
     return calculateEnergy(profile, age, coefficient, activity);
+  }
+
+  @override
+  Future<StatsExport> exportStats(int days) async {
+    final overview = await _store.read();
+    if (overview.profile == null) {
+      throw const Failure('Set up a profile first.');
+    }
+    return StatsExport.fromOverview(overview, days);
   }
 
   @override

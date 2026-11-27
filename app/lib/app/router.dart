@@ -18,6 +18,7 @@ import '../features/profile/presentation/profile_screen.dart';
 import '../features/settings/presentation/correction_screen.dart';
 import '../features/settings/presentation/credits_screen.dart';
 import '../features/settings/presentation/energy_screen.dart';
+import '../features/settings/presentation/export_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/today/presentation/today_screen.dart';
 import '../features/water/presentation/water_quick_add.dart';
@@ -108,6 +109,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: Routes.water, builder: (_, _) => const WaterScreen()),
       GoRoute(path: Routes.me, builder: (_, _) => const MeScreen()),
       GoRoute(path: Routes.profile, builder: (_, _) => const ProfileScreen()),
+      GoRoute(path: Routes.export, builder: (_, _) => const ExportScreen()),
       GoRoute(path: Routes.energy, builder: (_, _) => const EnergyScreen()),
       GoRoute(path: Routes.credits, builder: (_, _) => const CreditsScreen()),
       GoRoute(

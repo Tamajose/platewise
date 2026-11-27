@@ -7,12 +7,14 @@ import { compare } from "./compare.ts";
 import { nearby } from "./nearby.ts";
 import { erase } from "./privacy.ts";
 import { run } from "./actions.ts";
+import { createPhoneProvider } from "../providers/applink.ts";
 import { createAiProviders } from "../providers/registry.ts";
 
 /** Services with no AI configured, which printed-calorie options never need. */
 const services: Services = {
   ai: createAiProviders(() => undefined),
   flags: { banglaText: false, banglaSpeech: false },
+  phone: createPhoneProvider(() => undefined),
 };
 const range = (calorie_low: number, calorie_high: number) => ({ calorie_low, calorie_high });
 
@@ -199,4 +201,28 @@ Deno.test("storage failure keeps deletion pending and blocks touching auth", asy
   failStorage = false;
   assert.deepEqual(await erase(session, true), { deleted: true, account_deleted: true });
   assert.deepEqual(calls, ["pw_delete_begin", "pw_delete_begin", "pw_delete_finalize", "remove_identity"]);
+});
+
+Deno.test("an export asks the database for the chosen number of days", async () => {
+  const calls: unknown[] = [];
+  const client = {
+    rpc: (name: string, args: unknown) => {
+      calls.push([name, args]);
+      return Promise.resolve({ data: { days: 30 }, error: null });
+    },
+    from: () => ({ select: () => ({ maybeSingle: () => Promise.resolve({ data: null, error: null }) }) }),
+  };
+  const session = { uid: "u", client, admin: client } as unknown as Session;
+  assert.deepEqual(await run(session, "export_stats", { days: 30 }, services), { days: 30 });
+  assert.deepEqual(calls, [["pw_export", { p_days: 30 }]]);
+});
+
+Deno.test("an export is limited to one week up to one year", async () => {
+  const { actions } = await import("./actions.ts");
+  for (const days of [6, 366, 7.5, "30"]) {
+    assert.equal(actions.export_stats.safeParse({ days }).success, false, String(days));
+  }
+  for (const days of [7, 30, 365]) {
+    assert.equal(actions.export_stats.safeParse({ days }).success, true, String(days));
+  }
 });

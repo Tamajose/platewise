@@ -30,6 +30,7 @@ Photos are private owner-scoped objects. The object key is <user UUID>/<random U
 | delete_water | id | removed flag |
 | weekly | Empty object | Seven dated rows, coverage, target overlap, averages and nullable nutrients |
 | weekly_summary | Empty object | insufficient or generated, with server-approved sentences |
+| export_stats | days (whole number, 7–365) | The dashboard shape over the chosen days, plus requested_days, days and available_days. The window never starts before the first meal or water record and is never under 7 days |
 | estimate_energy | age (19–78), eligible=true, plus_5 or minus_161, low/some/regular activity | Resting energy, activity factor, total and eligibility to apply under pilot bounds |
 | correction_consent | enabled | Consent status. Withdrawal clears pending contributions |
 | share_correction | id, curated food_key, grams, calorie_low, calorie_high | Queued submission confirmation |

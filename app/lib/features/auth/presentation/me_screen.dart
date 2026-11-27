@@ -200,6 +200,12 @@ class MeScreen extends ConsumerWidget {
                     },
                   ),
                 _Link(
+                  icon: Icons.file_download_outlined,
+                  title: 'Export stats',
+                  detail: 'Daily calories and water as a spreadsheet',
+                  onTap: () => context.push(Routes.export),
+                ),
+                _Link(
                   icon: Icons.shield_outlined,
                   title: 'Settings and privacy',
                   detail: 'Language, data and deletion',

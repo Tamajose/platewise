@@ -17,6 +17,7 @@ abstract final class Routes {
   /// The person's own page: details, account and sign out.
   static const me = '/me';
   static const account = '/account';
+  static const export = '/export';
   static const energy = '/energy';
   static const credits = '/credits';
   static const correction = '/correction';

@@ -29,3 +29,7 @@ double_confirm_changes = false
 [functions.platewise]
 verify_jwt = false
 import_map = "./functions/deno.json"
+
+[functions.subscription-notify]
+verify_jwt = false
+import_map = "./functions/deno.json"

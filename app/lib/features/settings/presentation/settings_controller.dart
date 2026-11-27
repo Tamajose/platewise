@@ -4,6 +4,7 @@ import '../../../core/data/core_providers.dart';
 import '../../../core/domain/domain.dart';
 import '../../../core/presentation/failure_message.dart';
 import '../../../core/presentation/session_state.dart';
+import '../data/export_providers.dart';
 import '../data/settings_providers.dart';
 import '../domain/energy.dart';
 import '../domain/settings_rules.dart';
@@ -29,9 +30,11 @@ class SettingsController extends Notifier<SettingsState> {
       _work(() => ref.read(mediaStorageProvider).retryCleanup());
 
   /// Deletes the person's data, and their account when [account] is true.
-  Future<bool> erase({required bool account}) => _work(
-    () => ref.read(settingsRepositoryProvider).eraseData(account: account),
-  );
+  Future<bool> erase({required bool account}) => _work(() async {
+    await ref.read(settingsRepositoryProvider).eraseData(account: account);
+    // The permission belonged to the data that is now gone.
+    await ref.read(exportPermissionProvider.notifier).set(false);
+  });
 
   Future<bool> _work(Future<void> Function() action) async {
     state = const SettingsState(busy: true);

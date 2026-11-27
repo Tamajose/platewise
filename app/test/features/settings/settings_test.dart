@@ -13,6 +13,7 @@ import 'package:platewise/features/settings/data/settings_repositories.dart';
 import 'package:platewise/features/settings/domain/energy.dart';
 import 'package:platewise/features/settings/domain/settings_repository.dart';
 import 'package:platewise/features/settings/domain/settings_rules.dart';
+import 'package:platewise/features/settings/domain/stats_export.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
@@ -44,6 +45,9 @@ class FakeSettings implements SettingsRepository {
     String c,
     String a,
   ) async => calculateEnergy(p, age, c, a);
+
+  @override
+  Future<StatsExport> exportStats(int days) => throw UnimplementedError();
 
   @override
   Future<void> eraseData({required bool account}) async {
@@ -203,18 +207,36 @@ void main() {
       expect(find.text('Clear demo data'), findsOneWidget);
     });
 
+    testWidgets('data export is off until it is allowed here', (tester) async {
+      await open(tester);
+      expect(find.text('Export my stats'), findsNothing);
+      final toggle = find.widgetWithText(SwitchListTile, 'Allow data export');
+      await tester.ensureVisible(toggle);
+      expect(tester.widget<SwitchListTile>(toggle).value, isFalse);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      expect(find.text('Export my stats'), findsOneWidget);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      expect(find.text('Export my stats'), findsNothing);
+    });
+
     testWidgets('consent can be switched on and a correction submitted', (
       tester,
     ) async {
       final (store, settings) = await open(tester);
-      await tester.tap(find.byType(Switch));
+      await tester.tap(
+        find.widgetWithText(SwitchListTile, 'Allow correction contributions'),
+      );
       await tester.pumpAndSettle();
       expect(settings.calls, ['consent:true']);
       // The fake does not store the flag, so show the link by updating the store.
       await store.update(
         (s) => s.copyWith(profile: profile.copyWith(correctionConsent: true)),
       );
-      await tester.tap(find.byType(Switch));
+      await tester.tap(
+        find.widgetWithText(SwitchListTile, 'Allow correction contributions'),
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.text('Submit a food correction'));
       await tester.pumpAndSettle();
@@ -239,7 +261,9 @@ void main() {
     testWidgets('a failing action shows its message', (tester) async {
       final (_, settings) = await open(tester);
       settings.error = const Failure('Could not update.');
-      await tester.tap(find.byType(Switch));
+      await tester.tap(
+        find.widgetWithText(SwitchListTile, 'Allow correction contributions'),
+      );
       await tester.pumpAndSettle();
       expect(find.text('Could not update.'), findsOneWidget);
     });
