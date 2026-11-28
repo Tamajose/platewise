@@ -6,6 +6,7 @@ import '../core/presentation/failure_message.dart';
 import '../core/presentation/session_state.dart';
 import '../core/widgets/widgets.dart';
 import 'entry_route.dart';
+import '../core/l10n/l10n.dart';
 
 /// The first screen: opens a private session, then sends the person to where
 /// they belong. Shows why when the session cannot open.
@@ -28,7 +29,7 @@ class AppGate extends ConsumerWidget {
               retry: () => ref.invalidate(overviewProvider),
             )
           else
-            const LoadingState('Opening PlateWise…'),
+            LoadingState(context.tr('Opening PlateWise…')),
         ],
       ),
     );

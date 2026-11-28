@@ -1,10 +1,10 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../../core/domain/domain.dart';
-import '../../../core/format/number_format.dart';
 import '../../../core/theme/plate_theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../domain/decision.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// The ranked options, any that failed, and a way to retry.
 class DecisionResults extends StatelessWidget {
@@ -26,27 +26,34 @@ class DecisionResults extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       SectionTitle(
-        'Comparison results',
+        context.tr('Comparison results'),
         detail: budget == null
-            ? 'No meal budget selected'
-            : '${number(budget!)} kcal meal budget',
+            ? context.tr('No meal budget selected')
+            : context.tr('{p0} kcal meal budget', {
+                'p0': context.number(budget!),
+              }),
       ),
       const SizedBox(height: 8),
       if (result.meals.length == 1)
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(bottom: 8),
           child: Text(
-            'One option was estimated. Review it while you retry the others.',
+            context.tr(
+              'One option was estimated. Review it while you retry the others.',
+            ),
           ),
         ),
       for (final failure in result.failures) ...[
         ErrorState(
-          'Option ${(int.tryParse(failure.key) ?? 0) + 1} · ${failure.message}',
+          context.tr('Option {p0} · {p1}', {
+            'p0': (int.tryParse(failure.key) ?? 0) + 1,
+            'p1': failure.message,
+          }),
         ),
         const SizedBox(height: 7),
       ],
       if (result.failures.isNotEmpty && onRetry != null)
-        SecondaryButton('Retry comparison', onPressed: onRetry),
+        SecondaryButton(context.tr('Retry comparison'), onPressed: onRetry),
       LayoutBuilder(
         builder: (context, size) {
           final count = result.meals.length;
@@ -107,15 +114,21 @@ class RankedMealCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Rank ${meal.rank}${best ? ' · Best fit for your budget' : ''}',
+            context.tr('Rank {p0}{p1}', {
+              'p0': meal.rank,
+              'p1': best ? context.tr(' · Best fit for your budget') : '',
+            }),
             style: Theme.of(context).textTheme.labelLarge
                 ?.copyWith(color: PlateColors.forest),
           ),
           const SizedBox(height: 4),
-          Text(draft.title, style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            context.tr(draft.title),
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 7),
           Text(
-            '${draft.range.label} kcal',
+            context.tr('{p0} kcal', {'p0': draft.range.label}),
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           Text(draft.items.map((item) => item.portion).join(' + ')),
@@ -140,16 +153,26 @@ class RankedMealCard extends StatelessWidget {
           const SizedBox(height: 5),
           Text(
             protein != null
-                ? 'Estimated protein · ${protein.toStringAsFixed(1)} g (${nutrients[Nutrient.protein]!.known}/${draft.items.length} items)'
-                : 'Protein estimate unavailable',
+                ? context.tr('Estimated protein · {p0} g ({p1}/{p2} items)', {
+                    'p0': protein.toStringAsFixed(1),
+                    'p1': nutrients[Nutrient.protein]!.known,
+                    'p2': draft.items.length,
+                  })
+                : context.tr('Protein estimate unavailable'),
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 10),
           SizedBox(
             width: double.infinity,
             child: best
-                ? PrimaryButton('Choose this meal', onPressed: onChoose)
-                : SecondaryButton('Choose this meal', onPressed: onChoose),
+                ? PrimaryButton(
+                    context.tr('Choose this meal'),
+                    onPressed: onChoose,
+                  )
+                : SecondaryButton(
+                    context.tr('Choose this meal'),
+                    onPressed: onChoose,
+                  ),
           ),
         ],
       ),

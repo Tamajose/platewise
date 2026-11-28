@@ -28,6 +28,14 @@ AI features need an authorized provider key and current model availability. Two 
 - **The 150 kcal minimum for planned dishes is a pilot value.** Below it "Plan a dish" returns `BUDGET_TOO_SMALL` and the app shows a neutral note. The number has had no clinical or product review. Comparing and logging still work at any budget.
 - Text redaction covers common email, link, name-prefix and phone patterns and cannot identify every personal name. Photos and raw audio sent to a provider follow that provider's privacy controls. Users are asked to say only foods and portions.
 
+## Bangla mode
+
+- **The translations have not been reviewed by a native speaker.** About 700 strings were translated in standard written Bangla, including health, safety and privacy wording. They need review before real people use the app. The English text is the key, so a missing translation shows English instead of failing.
+- **Only the interface follows the language switch.** Text typed by the person, AI replies from a deployment without Bangla analysis, restaurant and venue names, and the demo's English sample menus stay as they are. Weekly summary sentences from the server are translated by pattern, so a new sentence needs a new entry.
+- **The AI answers in Bangla only where the deployment turns Bangla analysis on.** Its Bangla quality, voice input in Bangla and Bangla menu photos have not been measured.
+- **The `unit` and `confidence` values stay in English in the data.** The app shows them translated.
+- A check opens every screen in Bangla at normal and doubled text size, and fails on English words, Latin digits or overflow. It does not check how the text reads or looks on a real device.
+
 ## Accounts, data and cleanup
 
 - **Data export permission lives on the device.** The switch under Data and privacy only gates the export screen on this device. The server does not check it, and it resets when app data is erased. A saved file leaves the app's protection. On the web the browser downloads it. On other platforms it goes to the downloads folder where there is one, and to the app's documents folder otherwise, which is hard to reach on a phone, so Copy to clipboard is also offered. The SQL function `pw_export` has no database test yet, and the Android and iOS save paths have not been tried on a device.

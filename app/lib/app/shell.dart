@@ -6,6 +6,7 @@ import '../core/data/core_providers.dart';
 import '../core/presentation/routes.dart';
 import '../core/theme/plate_theme.dart';
 import '../core/widgets/widgets.dart';
+import '../core/l10n/l10n.dart';
 
 const _destinations = [
   (
@@ -67,13 +68,14 @@ class _AppShellState extends ConsumerState<AppShell> {
           : AppBar(
               title: const Wordmark(),
               actions: [
-                if (demo) const Center(child: IndicatorTag('Demo mode')),
+                const LanguageSwitchButton(),
+                if (demo) Center(child: IndicatorTag(context.tr('Demo mode'))),
                 const SizedBox(width: 5),
                 Padding(
                   padding: const EdgeInsets.only(right: 9),
                   child: IconButton(
                     onPressed: () => context.push(Routes.me),
-                    tooltip: 'Profile',
+                    tooltip: context.tr('Profile'),
                     icon: const Icon(Icons.account_circle_outlined),
                   ),
                 ),
@@ -135,7 +137,9 @@ class _AppShellState extends ConsumerState<AppShell> {
                       final open = !collapsed;
                       return Column(
                         children: [
-                          if (demo && open) const IndicatorTag('Demo mode'),
+                          if (demo && open)
+                            IndicatorTag(context.tr('Demo mode')),
+                          if (open) const LanguageSwitchButton(),
                           const SizedBox(height: 6),
                           open
                               ? SizedBox(
@@ -145,12 +149,12 @@ class _AppShellState extends ConsumerState<AppShell> {
                                     icon: const Icon(
                                       Icons.account_circle_outlined,
                                     ),
-                                    label: const Text('Profile'),
+                                    label: Text(context.tr('Profile')),
                                   ),
                                 )
                               : IconButton(
                                   onPressed: () => context.push(Routes.me),
-                                  tooltip: 'Profile',
+                                  tooltip: context.tr('Profile'),
                                   icon: const Icon(
                                     Icons.account_circle_outlined,
                                   ),
@@ -167,7 +171,7 @@ class _AppShellState extends ConsumerState<AppShell> {
                     NavigationRailDestination(
                       icon: Icon(item.icon),
                       selectedIcon: Icon(item.selected),
-                      label: Text(item.label),
+                      label: Text(context.tr(item.label)),
                     ),
                 ],
               ),
@@ -187,7 +191,7 @@ class _AppShellState extends ConsumerState<AppShell> {
                   NavigationDestination(
                     icon: Icon(item.icon),
                     selectedIcon: Icon(item.selected),
-                    label: item.label,
+                    label: context.tr(item.label),
                   ),
               ],
             ),

@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../core/domain/domain.dart';
@@ -11,6 +10,7 @@ import '../../../core/widgets/widgets.dart';
 import 'calorie_summary.dart';
 import 'meal_list_item.dart';
 import 'today_controller.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Builds the water quick-add for [log]. The app supplies it, because water
 /// belongs to another feature and features cannot import each other.
@@ -27,7 +27,7 @@ class TodayScreen extends ConsumerWidget {
     final error = await ref.read(todayActionsProvider).retryPhotoCleanup();
     if (error != null && context.mounted) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(error)));
+          .showSnackBar(SnackBar(content: Text(context.tr(error))));
     }
   }
 
@@ -36,7 +36,7 @@ class TodayScreen extends ConsumerWidget {
     final state = ref.watch(overviewProvider);
     return state.when(
       loading: () =>
-          const PageScroll(children: [LoadingState('Opening your log…')]),
+          PageScroll(children: [LoadingState(context.tr('Opening your log…'))]),
       error: (e, _) => PageScroll(
         children: [
           ErrorState(
@@ -59,8 +59,8 @@ class TodayScreen extends ConsumerWidget {
           },
           children: [
             PageHeading(
-              'Today',
-              eyebrow: DateFormat('EEEE, MMMM d').format(today.day),
+              context.tr('Today'),
+              eyebrow: context.dateFormat('EEEE, MMMM d').format(today.day),
             ),
             const SizedBox(height: 20),
             AdaptiveColumns(
@@ -74,12 +74,12 @@ class TodayScreen extends ConsumerWidget {
                     primaryFlex: 1,
                     secondaryFlex: 1,
                     primary: PrimaryButton(
-                      'Compare meals',
+                      context.tr('Compare meals'),
                       icon: Icons.compare_arrows_rounded,
                       onPressed: () => context.go(Routes.decide),
                     ),
                     secondary: SecondaryButton(
-                      'Log meal',
+                      context.tr('Log meal'),
                       icon: Icons.add_rounded,
                       onPressed: () => context.push(Routes.log),
                     ),
@@ -89,12 +89,12 @@ class TodayScreen extends ConsumerWidget {
               secondary: water ?? const SizedBox.shrink(),
             ),
             const SizedBox(height: 24),
-            const SectionTitle('Meals today'),
+            SectionTitle(context.tr('Meals today')),
             const SizedBox(height: 9),
             if (today.meals.isEmpty)
-              const EmptyState(
-                'No meals logged yet',
-                'Add a meal to see your estimated intake here.',
+              EmptyState(
+                context.tr('No meals logged yet'),
+                context.tr('Add a meal to see your estimated intake here.'),
               )
             else
               Surface(
@@ -114,7 +114,7 @@ class TodayScreen extends ConsumerWidget {
             if (data.pendingAssets > 0) ...[
               const SizedBox(height: 11),
               ErrorState(
-                'A removed photo is still pending cleanup.',
+                context.tr('A removed photo is still pending cleanup.'),
                 retry: () => retryCleanup(context, ref),
               ),
             ],

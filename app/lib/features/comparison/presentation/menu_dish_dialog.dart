@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../core/widgets/widgets.dart';
 import '../domain/compare_photos.dart';
 import '../domain/decision.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// A dialog for adding or correcting one menu dish. Pops with the new
 /// [MenuOption].
@@ -40,7 +41,7 @@ class _MenuDishDialogState extends State<MenuDishDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Edit dish'),
+    title: Text(context.tr('Edit dish')),
     scrollable: true,
     content: Form(
       key: form,
@@ -50,18 +51,21 @@ class _MenuDishDialogState extends State<MenuDishDialog> {
           TextFormField(
             controller: name,
             maxLength: 100,
-            decoration: const InputDecoration(
-              labelText: 'Dish name',
+            buildCounter: context.counterBuilder,
+            decoration: InputDecoration(
+              labelText: context.tr('Dish name'),
               counterText: '',
             ),
-            validator: (v) => v!.trim().isEmpty ? 'Enter a dish name.' : null,
+            validator: (v) =>
+                v!.trim().isEmpty ? context.tr('Enter a dish name.') : null,
           ),
           const SizedBox(height: 8),
           TextFormField(
             controller: portion,
             maxLength: 100,
-            decoration: const InputDecoration(
-              labelText: 'Portion (optional)',
+            buildCounter: context.counterBuilder,
+            decoration: InputDecoration(
+              labelText: context.tr('Portion (optional)'),
               counterText: '',
             ),
           ),
@@ -69,8 +73,8 @@ class _MenuDishDialogState extends State<MenuDishDialog> {
           TextFormField(
             controller: kcal,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Printed kcal (optional)',
+            decoration: InputDecoration(
+              labelText: context.tr('Printed kcal (optional)'),
             ),
             validator: (v) => v!.trim().isEmpty ? null : _check(v),
           ),
@@ -80,10 +84,10 @@ class _MenuDishDialogState extends State<MenuDishDialog> {
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
+        child: Text(context.tr('Cancel')),
       ),
       PrimaryButton(
-        'Apply',
+        context.tr('Apply'),
         onPressed: () {
           if (!form.currentState!.validate()) return;
           Navigator.pop(

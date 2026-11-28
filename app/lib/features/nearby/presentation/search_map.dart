@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/plate_theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../domain/restaurant.dart';
+import '../../../core/l10n/l10n.dart';
 
 LatLng _latLng(GeoPoint point) => LatLng(point.latitude, point.longitude);
 
@@ -127,11 +128,11 @@ class _SearchMapState extends State<SearchMap> {
                     point: _latLng(pin),
                     width: 45,
                     height: 45,
-                    child: const Icon(
+                    child: Icon(
                       Icons.location_on,
                       color: PlateColors.deep,
                       size: 42,
-                      semanticLabel: 'Selected location',
+                      semanticLabel: context.tr('Selected location'),
                     ),
                   ),
               ],
@@ -148,12 +149,12 @@ class _SearchMapState extends State<SearchMap> {
                 ],
               )
             else
-              const Align(
+              Align(
                 alignment: Alignment.bottomRight,
                 child: Padding(
                   padding: EdgeInsets.all(5),
                   child: IndicatorTag(
-                    'Schematic pin map',
+                    context.tr('Schematic pin map'),
                     background: Colors.white,
                   ),
                 ),

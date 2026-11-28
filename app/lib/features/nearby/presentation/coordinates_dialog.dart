@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../core/widgets/widgets.dart';
 import '../domain/restaurant.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// A dialog for typing a latitude and longitude. Pops with the [GeoPoint].
 class CoordinatesDialog extends StatefulWidget {
@@ -36,7 +37,7 @@ class _CoordinatesDialogState extends State<CoordinatesDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Enter coordinates'),
+    title: Text(context.tr('Enter coordinates')),
     scrollable: true,
     content: Form(
       key: form,
@@ -53,11 +54,14 @@ class _CoordinatesDialogState extends State<CoordinatesDialog> {
                 decimal: true,
                 signed: true,
               ),
-              decoration: InputDecoration(labelText: field.$2),
+              decoration: InputDecoration(labelText: context.tr(field.$2)),
               validator: (value) {
                 final n = double.tryParse(value!.trim());
                 return n == null || !n.isFinite || n.abs() > field.$3
-                    ? 'Enter –${field.$3} to ${field.$3}.'
+                    ? context.tr('Enter –{p0} to {p1}.', {
+                        'p0': field.$3,
+                        'p1': field.$3,
+                      })
                     : null;
               },
             ),
@@ -69,10 +73,10 @@ class _CoordinatesDialogState extends State<CoordinatesDialog> {
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
+        child: Text(context.tr('Cancel')),
       ),
       PrimaryButton(
-        'Use location',
+        context.tr('Use location'),
         onPressed: () {
           if (!form.currentState!.validate()) return;
           Navigator.pop(

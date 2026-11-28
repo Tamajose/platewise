@@ -456,3 +456,13 @@ Deno.test("a model reply is read as JSON with or without decoration", () => {
   assert.deepEqual(parseJsonReply('Here you go: {"a":{"b":2}} Enjoy.'), { a: { b: 2 } });
   assert.throws(() => parseJsonReply("no json here"), SyntaxError);
 });
+
+Deno.test("the instructions ask for the requested language and keep the schema values", async () => {
+  const { calls, network } = recorder();
+  const ai = createAiProviders(environment({ OPENAI_API_KEY: "local-test-value" }), network);
+  await ai.analyzeText("ভাত আর ডাল", "bn");
+  const body = calls[0].body as Record<string, any>;
+  assert.match(body.messages[0].content, /standard written Bangla/);
+  assert.match(body.messages[0].content, /enum values such as units/);
+  assert.match(body.messages[1].content, /"language":"bn"/);
+});

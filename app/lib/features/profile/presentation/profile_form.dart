@@ -7,6 +7,7 @@ import '../../../core/theme/plate_theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../domain/profile_rules.dart';
 import 'profile_actions.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Units, body measurements, local day, optional target and water goal. Used to
 /// set up a new profile and to edit an existing one.
@@ -101,21 +102,28 @@ class _ProfileFormState extends ConsumerState<ProfileForm> {
         children: [
           PageHeading(
             widget.initial == null
-                ? 'Set up your profile'
-                : 'Edit your profile',
-            detail: 'Choose the units and local day for your log. You can add a daily target if it suits you.',
+                ? context.tr('Set up your profile')
+                : context.tr('Edit your profile'),
+            detail: context.tr(
+              'Choose the units and local day for your log. You can add a daily target if it suits you.',
+            ),
           ),
           const SizedBox(height: 18),
           DropdownButtonFormField<String>(
             isExpanded: true,
             initialValue: units,
-            decoration: const InputDecoration(labelText: 'Measurement units'),
-            items: const [
+            decoration: InputDecoration(
+              labelText: context.tr('Measurement units'),
+            ),
+            items: [
               DropdownMenuItem(
                 value: 'metric',
-                child: Text('Metric · cm / kg'),
+                child: Text(context.tr('Metric · cm / kg')),
               ),
-              DropdownMenuItem(value: 'us', child: Text('US · in / lb')),
+              DropdownMenuItem(
+                value: 'us',
+                child: Text(context.tr('US · in / lb')),
+              ),
             ],
             onChanged: busy ? null : (v) => changeUnits(v!),
           ),
@@ -125,7 +133,9 @@ class _ProfileFormState extends ConsumerState<ProfileForm> {
             onChanged: (_) => setState(() {}),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
-              labelText: units == 'us' ? 'Height (in)' : 'Height (cm)',
+              labelText: units == 'us'
+                  ? context.tr('Height (in)')
+                  : context.tr('Height (cm)'),
             ),
             validator: (v) => heightError(v ?? '', units),
           ),
@@ -135,7 +145,9 @@ class _ProfileFormState extends ConsumerState<ProfileForm> {
             onChanged: (_) => setState(() {}),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
-              labelText: units == 'us' ? 'Weight (lb)' : 'Weight (kg)',
+              labelText: units == 'us'
+                  ? context.tr('Weight (lb)')
+                  : context.tr('Weight (kg)'),
             ),
             validator: (v) => weightError(v ?? '', units),
           ),
@@ -144,7 +156,10 @@ class _ProfileFormState extends ConsumerState<ProfileForm> {
             Surface(
               color: PlateColors.sage,
               child: Text(
-                'BMI ${index.toStringAsFixed(1)} · BMI is a screening measure and does not determine calorie needs.',
+                context.tr(
+                  'BMI {p0} · BMI is a screening measure and does not determine calorie needs.',
+                  {'p0': index.toStringAsFixed(1)},
+                ),
               ),
             ),
           ],
@@ -152,9 +167,10 @@ class _ProfileFormState extends ConsumerState<ProfileForm> {
           TextFormField(
             controller: zone,
             maxLength: 80,
-            decoration: const InputDecoration(
-              labelText: 'IANA timezone',
-              hintText: 'Asia/Dhaka',
+            buildCounter: context.counterBuilder,
+            decoration: InputDecoration(
+              labelText: context.tr('IANA timezone'),
+              hintText: context.tr('Asia/Dhaka'),
               counterText: '',
             ),
             validator: (v) => timezoneError(v ?? ''),
@@ -163,15 +179,17 @@ class _ProfileFormState extends ConsumerState<ProfileForm> {
           TextFormField(
             controller: target,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Daily target (kcal, optional)',
+            decoration: InputDecoration(
+              labelText: context.tr('Daily target (kcal, optional)'),
               errorMaxLines: 5,
             ),
             validator: (v) => targetFieldError(v ?? ''),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'If you’re under 18, pregnant or breastfeeding, have eating-disorder concerns, or need an individualized nutrition plan, continue without a target and ask a qualified professional.',
+          Text(
+            context.tr(
+              'If you’re under 18, pregnant or breastfeeding, have eating-disorder concerns, or need an individualized nutrition plan, continue without a target and ask a qualified professional.',
+            ),
           ),
           CheckboxListTile(
             contentPadding: EdgeInsets.zero,
@@ -180,14 +198,18 @@ class _ProfileFormState extends ConsumerState<ProfileForm> {
             onChanged: busy
                 ? null
                 : (v) => setState(() => applies = v ?? false),
-            title: const Text('Adult target-setting is appropriate for me.'),
+            title: Text(
+              context.tr('Adult target-setting is appropriate for me.'),
+            ),
           ),
           if (widget.initial != null) ...[
             const SizedBox(height: 10),
             TextFormField(
               controller: water,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Water goal (ml)'),
+              decoration: InputDecoration(
+                labelText: context.tr('Water goal (ml)'),
+              ),
               validator: (v) => waterGoalError(v ?? ''),
             ),
           ],
@@ -196,12 +218,18 @@ class _ProfileFormState extends ConsumerState<ProfileForm> {
             DropdownButtonFormField<String>(
               isExpanded: true,
               initialValue: language,
-              decoration: const InputDecoration(
-                labelText: 'Preferred analysis language',
+              decoration: InputDecoration(
+                labelText: context.tr('Preferred analysis language'),
               ),
-              items: const [
-                DropdownMenuItem(value: 'en', child: Text('English')),
-                DropdownMenuItem(value: 'bn', child: Text('Bangla')),
+              items: [
+                DropdownMenuItem(
+                  value: 'en',
+                  child: Text(context.tr('English')),
+                ),
+                DropdownMenuItem(
+                  value: 'bn',
+                  child: Text(context.tr('Bangla')),
+                ),
               ],
               onChanged: busy ? null : (v) => setState(() => language = v!),
             ),
@@ -214,7 +242,9 @@ class _ProfileFormState extends ConsumerState<ProfileForm> {
             const SizedBox(height: 10),
           ],
           PrimaryButton(
-            widget.initial == null ? 'Continue to Today' : 'Save profile',
+            widget.initial == null
+                ? context.tr('Continue to Today')
+                : context.tr('Save profile'),
             onPressed: save,
             busy: busy,
           ),

@@ -3,12 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../core/domain/domain.dart';
-import '../../../core/format/number_format.dart';
 import '../../../core/presentation/session_state.dart';
 import '../../../core/theme/plate_theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../domain/energy.dart';
 import 'settings_controller.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Estimate adult energy needs and, if the person chooses, use the result as
 /// the daily target.
@@ -23,18 +23,21 @@ class EnergyScreen extends ConsumerWidget {
   ) async {
     final yes = await ConfirmationSheet.ask(
       context,
-      title: 'Use this estimate as your target?',
-      message:
-          'Your daily target will be ${number(total)} kcal starting today. Previous dates keep their saved targets.',
-      action: 'Confirm target',
+      title: context.tr('Use this estimate as your target?'),
+      message: context.tr(
+        'Your daily target will be {p0} kcal starting today. Previous dates keep their saved targets.',
+        {'p0': context.number(total)},
+      ),
+      action: context.tr('Confirm target'),
     );
     if (!yes || !context.mounted) return;
     final saved = await ref
         .read(energyControllerProvider.notifier)
         .applyAsTarget(profile, total);
     if (!saved || !context.mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Daily target updated')));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(context.tr('Daily target updated'))));
     context.pop();
   }
 
@@ -45,25 +48,29 @@ class EnergyScreen extends ConsumerWidget {
     final controller = ref.read(energyControllerProvider.notifier);
     final inputsOn = state.eligible && !state.busy;
     return Standalone(
-      title: 'Energy estimate',
+      title: context.tr('Energy estimate'),
       body: PageScroll(
         children: [
-          const PageHeading(
-            'Estimate adult energy needs',
-            detail: 'Use your profile height and weight with the Mifflin–St Jeor equation. You decide whether to use the result.',
+          PageHeading(
+            context.tr('Estimate adult energy needs'),
+            detail: context.tr(
+              'Use your profile height and weight with the Mifflin–St Jeor equation. You decide whether to use the result.',
+            ),
           ),
           const SizedBox(height: 12),
-          const Surface(
+          Surface(
             color: PlateColors.sage,
             child: Text(
-              'This pilot supports ages 19 to 78. Skip this estimate during pregnancy or breastfeeding, with eating-disorder concerns, or when you need an individualized nutrition plan. You can keep logging meals and speak with a qualified professional.',
+              context.tr(
+                'This pilot supports ages 19 to 78. Skip this estimate during pregnancy or breastfeeding, with eating-disorder concerns, or when you need an individualized nutrition plan. You can keep logging meals and speak with a qualified professional.',
+              ),
             ),
           ),
           CheckboxListTile(
             value: state.eligible,
             contentPadding: EdgeInsets.zero,
             controlAffinity: ListTileControlAffinity.leading,
-            title: const Text('The adult estimate applies to me.'),
+            title: Text(context.tr('The adult estimate applies to me.')),
             onChanged: state.busy
                 ? null
                 : (value) => controller.setEligible(value ?? false),
@@ -73,50 +80,59 @@ class EnergyScreen extends ConsumerWidget {
             enabled: inputsOn,
             keyboardType: TextInputType.number,
             onChanged: controller.setAge,
-            decoration: const InputDecoration(labelText: 'Age in years'),
+            decoration: InputDecoration(labelText: context.tr('Age in years')),
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
             initialValue: state.coefficient,
             isExpanded: true,
-            decoration: const InputDecoration(labelText: 'Calculation group'),
-            items: const [
+            decoration: InputDecoration(
+              labelText: context.tr('Calculation group'),
+            ),
+            items: [
               DropdownMenuItem(
                 value: 'plus_5',
-                child: Text('Male study group (+5)'),
+                child: Text(context.tr('Male study group (+5)')),
               ),
               DropdownMenuItem(
                 value: 'minus_161',
-                child: Text('Female study group (−161)'),
+                child: Text(context.tr('Female study group (−161)')),
               ),
             ],
             onChanged: inputsOn ? controller.setCoefficient : null,
           ),
           const SizedBox(height: 5),
-          const Text(
-            'The original study used two group constants. Choose the relevant one or skip the estimate.',
+          Text(
+            context.tr(
+              'The original study used two group constants. Choose the relevant one or skip the estimate.',
+            ),
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
             initialValue: state.activity,
             isExpanded: true,
-            decoration: const InputDecoration(labelText: 'Typical activity'),
-            items: const [
-              DropdownMenuItem(value: 'low', child: Text('Mostly seated')),
+            decoration: InputDecoration(
+              labelText: context.tr('Typical activity'),
+            ),
+            items: [
+              DropdownMenuItem(
+                value: 'low',
+                child: Text(context.tr('Mostly seated')),
+              ),
               DropdownMenuItem(
                 value: 'some',
-                child: Text('Some daily movement'),
+                child: Text(context.tr('Some daily movement')),
               ),
               DropdownMenuItem(
                 value: 'regular',
-                child: Text('Regular moderate activity'),
+                child: Text(context.tr('Regular moderate activity')),
               ),
             ],
             onChanged: inputsOn ? controller.setActivity : null,
           ),
           const SizedBox(height: 10),
           PrimaryButton(
-            'Calculate estimate',
+            context.tr('Calculate estimate'),
             onPressed: profile != null && state.eligible
                 ? () => controller.calculate(profile)
                 : null,
@@ -125,15 +141,22 @@ class EnergyScreen extends ConsumerWidget {
           if (state.result case final EnergyEstimate estimated) ...[
             const SizedBox(height: 13),
             MetricCard(
-              label: 'Estimated daily energy use',
-              value: '${number(estimated.total)} kcal',
-              detail:
-                  'Estimated resting energy ${number(estimated.resting)} kcal × activity ${estimated.multiplier}. Activity multipliers are approximations.',
+              label: context.tr('Estimated daily energy use'),
+              value: context.tr('{p0} kcal', {
+                'p0': context.number(estimated.total),
+              }),
+              detail: context.tr(
+                'Estimated resting energy {p0} kcal × activity {p1}. Activity multipliers are approximations.',
+                {
+                  'p0': context.number(estimated.resting),
+                  'p1': estimated.multiplier,
+                },
+              ),
             ),
             const SizedBox(height: 8),
             if (estimated.canApply && profile != null)
               SecondaryButton(
-                'Review as a daily target',
+                context.tr('Review as a daily target'),
                 onPressed: state.busy
                     ? null
                     : () => apply(context, ref, profile, estimated.total),
@@ -146,8 +169,10 @@ class EnergyScreen extends ConsumerWidget {
             ErrorState(state.error!),
           ],
           const SizedBox(height: 12),
-          const DisclaimerNotice(
-            text: 'An estimate of daily energy use is approximate. PlateWise does not prescribe a deficit or provide medical advice.',
+          DisclaimerNotice(
+            text: context.tr(
+              'An estimate of daily energy use is approximate. PlateWise does not prescribe a deficit or provide medical advice.',
+            ),
           ),
         ],
       ),

@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../theme/plate_theme.dart';
 import 'indicators.dart';
 import 'layout.dart';
+import '../../core/l10n/l10n.dart';
 
 class LoadingState extends StatelessWidget {
   const LoadingState(this.message, {super.key});
@@ -19,7 +20,7 @@ class LoadingState extends StatelessWidget {
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
           const SizedBox(width: 14),
-          Expanded(child: Text(message)),
+          Expanded(child: Text(context.tr(message))),
         ],
       ),
     ),
@@ -49,14 +50,14 @@ class ErrorState extends StatelessWidget {
               const SizedBox(width: 9),
               Expanded(
                 child: Text(
-                  message,
+                  context.tr(message),
                   style: const TextStyle(color: PlateColors.amberInk),
                 ),
               ),
             ],
           ),
           if (retry != null)
-            TextButton(onPressed: retry, child: const Text('Try again')),
+            TextButton(onPressed: retry, child: Text(context.tr('Try again'))),
         ],
       ),
     ),

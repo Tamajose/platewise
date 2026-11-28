@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../core/widgets/widgets.dart';
 import '../domain/water_repository.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Asks for an amount in millilitres. Null when cancelled.
 Future<int?> askWaterAmount(BuildContext context, {int? initial}) =>
@@ -42,7 +43,11 @@ class _WaterAmountDialogState extends State<_WaterAmountDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: Text(widget.initial == null ? 'Add water' : 'Edit water'),
+    title: Text(
+      widget.initial == null
+          ? context.tr('Add water')
+          : context.tr('Edit water'),
+    ),
     scrollable: true,
     content: Form(
       key: form,
@@ -51,7 +56,7 @@ class _WaterAmountDialogState extends State<_WaterAmountDialog> {
         autofocus: true,
         keyboardType: TextInputType.number,
         onFieldSubmitted: (_) => submit(),
-        decoration: const InputDecoration(labelText: 'Amount (ml)'),
+        decoration: InputDecoration(labelText: context.tr('Amount (ml)')),
         validator: (value) =>
             parseWaterAmount(value ?? '') == null ? waterAmountMessage : null,
       ),
@@ -59,9 +64,9 @@ class _WaterAmountDialogState extends State<_WaterAmountDialog> {
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
+        child: Text(context.tr('Cancel')),
       ),
-      PrimaryButton('Save water', onPressed: submit),
+      PrimaryButton(context.tr('Save water'), onPressed: submit),
     ],
   );
 }

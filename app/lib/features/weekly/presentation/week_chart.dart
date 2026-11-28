@@ -1,13 +1,12 @@
 import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../../core/format/number_format.dart';
 import '../../../core/theme/plate_theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../domain/weekly_report.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Seven days of logged calories beside the target, with a day-by-day list
 /// that replaces the chart when text is scaled up.
@@ -24,14 +23,20 @@ class WeekChart extends StatelessWidget {
       (v, d) => math.max(v, math.max(d.representative, d.target ?? 0)),
     );
     final maxY = (maximum / 500).ceil() * 500.0 + 500;
-    final date = DateFormat('EEE');
-    final chartLabel =
-        'Seven-day calorie chart. ${days.map((d) => '${date.format(d.day)} ${d.logged ? '${d.representative} kcal logged' : 'no meals logged'}, ${d.target == null ? 'no target' : '${d.target} kcal target'}').join('. ')}';
+    final date = context.dateFormat('EEE');
+    final chartLabel = context.tr('Seven-day calorie chart. {p0}', {
+      'p0': days
+          .map(
+            (d) =>
+                '${date.format(d.day)} ${d.logged ? context.tr('{p0} kcal logged', {'p0': d.representative}) : context.tr('no meals logged')}, ${d.target == null ? context.tr('no target') : context.tr('{p0} kcal target', {'p0': d.target})}',
+          )
+          .join('. '),
+    });
     return Surface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SectionTitle('Intake and target'),
+          SectionTitle(context.tr('Intake and target')),
           const SizedBox(height: 6),
           const Wrap(
             spacing: 12,
@@ -43,7 +48,7 @@ class WeekChart extends StatelessWidget {
           ),
           if (report.logged.isEmpty) ...[
             const SizedBox(height: 10),
-            const Text('No meals logged in this window.'),
+            Text(context.tr('No meals logged in this window.')),
           ],
           if (MediaQuery.textScalerOf(context).scale(13) <= 19) ...[
             const SizedBox(height: 14),
@@ -77,8 +82,10 @@ class WeekChart extends StatelessWidget {
                             interval: maxY > 3500 ? 2000 : 1000,
                             getTitlesWidget: (value, _) => Text(
                               value == 0
-                                  ? '0'
-                                  : '${(value / 1000).toStringAsFixed(0)}k',
+                                  ? context.digits('0')
+                                  : context.tr('{p0}k', {
+                                      'p0': (value / 1000).toStringAsFixed(0),
+                                    }),
                               style: theme.bodySmall,
                             ),
                           ),
@@ -95,7 +102,7 @@ class WeekChart extends StatelessWidget {
                               return Padding(
                                 padding: const EdgeInsets.only(top: 5),
                                 child: Text(
-                                  date.format(days[i].day).substring(0, 1),
+                                  date.format(days[i].day).characters.first,
                                   style: theme.bodySmall,
                                 ),
                               );
@@ -142,17 +149,37 @@ class WeekChart extends StatelessWidget {
             type: MaterialType.transparency,
             child: ExpansionTile(
               tilePadding: EdgeInsets.zero,
-              title: const Text('Day-by-day details'),
+              title: Text(context.tr('Day-by-day details')),
               initiallyExpanded:
                   MediaQuery.textScalerOf(context).scale(13) > 19,
               children: [
                 for (final day in days)
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: Text(DateFormat('EEE, MMM d').format(day.day)),
+                    title: Text(
+                      context.dateFormat('EEE, MMM d').format(day.day),
+                    ),
                     subtitle: Text(
-                      '${day.logged ? '${day.intake.label} kcal logged' : 'No meals logged'} · ${day.target == null ? 'No target' : '${number(day.target!)} kcal target'}'
-                      '${day.targetRelation == null ? '' : ' · ${day.targetRelation}'}${day.waterMl == 0 ? '' : ' · ${number(day.waterMl)} ml water'}',
+                      [
+                        if (day.logged)
+                          context.tr('{p0} kcal logged', {
+                            'p0': day.intake.label,
+                          })
+                        else
+                          context.tr('No meals logged'),
+                        if (day.target == null)
+                          context.tr('No target')
+                        else
+                          context.tr('{p0} kcal target', {
+                            'p0': context.number(day.target!),
+                          }),
+                        if (day.targetRelation != null)
+                          context.tr(day.targetRelation!),
+                        if (day.waterMl != 0)
+                          context.tr('{p0} ml water', {
+                            'p0': context.number(day.waterMl),
+                          }),
+                      ].join(' · '),
                     ),
                   ),
               ],
@@ -183,7 +210,10 @@ class _Legend extends StatelessWidget {
       ),
       const SizedBox(width: 5),
       Flexible(
-        child: Text(label, style: Theme.of(context).textTheme.bodySmall),
+        child: Text(
+          context.tr(label),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
       ),
     ],
   );

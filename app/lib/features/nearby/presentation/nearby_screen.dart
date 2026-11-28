@@ -9,6 +9,7 @@ import 'coordinates_dialog.dart';
 import 'nearby_controller.dart';
 import 'sample_menus.dart';
 import 'search_map.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Find restaurants around a chosen area, and in demo mode browse sample menus.
 class NearbyScreen extends ConsumerWidget {
@@ -37,10 +38,11 @@ class NearbyScreen extends ConsumerWidget {
     return PageScroll(
       maxWidth: 1080,
       children: [
-        const PageHeading(
-          'Nearby',
-          detail:
-              'Find live restaurant listings around your selected location.',
+        PageHeading(
+          context.tr('Nearby'),
+          detail: context.tr(
+            'Find live restaurant listings around your selected location.',
+          ),
         ),
         const SizedBox(height: 18),
         AdaptiveColumns(
@@ -50,10 +52,12 @@ class NearbyScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SectionTitle('Search area'),
+                SectionTitle(context.tr('Search area')),
                 const SizedBox(height: 12),
                 PrimaryButton(
-                  state.locating ? 'Locating…' : 'Use my location',
+                  state.locating
+                      ? context.tr('Locating…')
+                      : context.tr('Use my location'),
                   icon: Icons.my_location_rounded,
                   busy: state.locating,
                   onPressed: state.busy ? null : controller.locate,
@@ -65,13 +69,15 @@ class NearbyScreen extends ConsumerWidget {
                       ? state.area
                       : null,
                   isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Select a location',
+                  decoration: InputDecoration(
+                    labelText: context.tr('Select a location'),
                     prefixIcon: Icon(Icons.place_outlined),
                   ),
                   hint: Text(
                     state.area ??
-                        (pin == null ? 'Choose an area' : 'Custom map point'),
+                        context.tr(
+                          pin == null ? 'Choose an area' : 'Custom map point',
+                        ),
                   ),
                   items: [
                     for (final area in searchAreas)
@@ -91,23 +97,28 @@ class NearbyScreen extends ConsumerWidget {
                         },
                 ),
                 const SizedBox(height: 10),
-                Row(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Radius ${state.radius.toStringAsFixed(0)} km'),
-                    Expanded(
-                      child: Slider(
-                        value: state.radius,
-                        min: 1,
-                        max: maxNearbyRadiusKm,
-                        divisions: maxNearbyRadiusKm.toInt() - 1,
-                        label: '${state.radius.toStringAsFixed(0)} km',
-                        onChanged: state.busy ? null : controller.setRadius,
-                      ),
+                    Text(
+                      context.tr('Radius {p0} km', {
+                        'p0': state.radius.toStringAsFixed(0),
+                      }),
+                    ),
+                    Slider(
+                      value: state.radius,
+                      min: 1,
+                      max: maxNearbyRadiusKm,
+                      divisions: maxNearbyRadiusKm.toInt() - 1,
+                      label: context.tr('{p0} km', {
+                        'p0': state.radius.toStringAsFixed(0),
+                      }),
+                      onChanged: state.busy ? null : controller.setRadius,
                     ),
                   ],
                 ),
                 SecondaryButton(
-                  'Search this area',
+                  context.tr('Search this area'),
                   icon: Icons.search,
                   onPressed: state.busy || pin == null
                       ? null
@@ -125,7 +136,7 @@ class NearbyScreen extends ConsumerWidget {
                   onPressed: state.busy
                       ? null
                       : () => enterCoordinates(context, ref),
-                  child: const Text('Enter coordinates'),
+                  child: Text(context.tr('Enter coordinates')),
                 ),
               ],
             ),
@@ -134,8 +145,8 @@ class NearbyScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               TextField(
-                decoration: const InputDecoration(
-                  labelText: 'Restaurant or cuisine',
+                decoration: InputDecoration(
+                  labelText: context.tr('Restaurant or cuisine'),
                   prefixIcon: Icon(Icons.search),
                 ),
                 textInputAction: TextInputAction.done,
@@ -147,20 +158,24 @@ class NearbyScreen extends ConsumerWidget {
                   if (state.showMap)
                     Expanded(
                       child: Text(
-                        'Tap the map to set your pin',
+                        context.tr('Tap the map to set your pin'),
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     )
                   else
                     const Spacer(),
-                  TextButton.icon(
-                    onPressed: controller.toggleMap,
-                    icon: Icon(
-                      state.showMap
-                          ? Icons.view_list_outlined
-                          : Icons.map_outlined,
+                  Flexible(
+                    child: TextButton.icon(
+                      onPressed: controller.toggleMap,
+                      icon: Icon(
+                        state.showMap
+                            ? Icons.view_list_outlined
+                            : Icons.map_outlined,
+                      ),
+                      label: Text(
+                        context.tr(state.showMap ? 'List view' : 'Map view'),
+                      ),
                     ),
-                    label: Text(state.showMap ? 'List view' : 'Map view'),
                   ),
                 ],
               ),
@@ -179,32 +194,37 @@ class NearbyScreen extends ConsumerWidget {
                   restaurants == null &&
                   state.searchError == null &&
                   state.locationError == null)
-                const EmptyState(
-                  'Choose a search area',
-                  'Use your current location, select an area, or set a pin on the map.',
+                EmptyState(
+                  context.tr('Choose a search area'),
+                  context.tr(
+                    'Use your current location, select an area, or set a pin on the map.',
+                  ),
                   icon: Icons.place_outlined,
                 ),
               if (state.loading)
-                const LoadingState('Finding nearby restaurants…'),
+                LoadingState(context.tr('Finding nearby restaurants…')),
               if (restaurants != null) ...[
                 const SizedBox(height: 14),
                 SectionTitle(
-                  'Nearby restaurants',
+                  context.tr('Nearby restaurants'),
                   detail: matches.length > visible.length
-                      ? 'Showing ${visible.length} of ${matches.length} matches'
+                      ? context.tr('Showing {p0} of {p1} matches', {
+                          'p0': visible.length,
+                          'p1': matches.length,
+                        })
                       : null,
                 ),
                 const SizedBox(height: 7),
                 if (restaurants.isEmpty)
-                  const EmptyState(
-                    'No restaurants found',
-                    'Try a larger radius or a different location.',
+                  EmptyState(
+                    context.tr('No restaurants found'),
+                    context.tr('Try a larger radius or a different location.'),
                     icon: Icons.location_off_outlined,
                   )
                 else if (matches.isEmpty)
-                  const EmptyState(
-                    'No matches',
-                    'Try another restaurant name or cuisine.',
+                  EmptyState(
+                    context.tr('No matches'),
+                    context.tr('Try another restaurant name or cuisine.'),
                     icon: Icons.search_off_outlined,
                   ),
                 Align(
@@ -213,7 +233,7 @@ class NearbyScreen extends ConsumerWidget {
                     onPressed: () => ref.read(urlOpenerProvider)(
                       Uri.parse('https://www.openstreetmap.org/copyright'),
                     ),
-                    child: const Text('© OpenStreetMap contributors'),
+                    child: Text(context.tr('© OpenStreetMap contributors')),
                   ),
                 ),
                 for (final place in visible) ...[
@@ -226,7 +246,9 @@ class NearbyScreen extends ConsumerWidget {
                 TextButton(
                   onPressed: controller.toggleSamples,
                   child: Text(
-                    state.showSamples ? 'Hide sample menus' : 'Sample menus',
+                    state.showSamples
+                        ? context.tr('Hide sample menus')
+                        : context.tr('Sample menus'),
                   ),
                 ),
                 if (state.showSamples)
@@ -250,8 +272,8 @@ class _RestaurantCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final distance = place.distanceKm < 1
-        ? '${(place.distanceKm * 1000).round()} m'
-        : '${place.distanceKm.toStringAsFixed(1)} km';
+        ? context.tr('{p0} m', {'p0': (place.distanceKm * 1000).round()})
+        : context.tr('{p0} km', {'p0': place.distanceKm.toStringAsFixed(1)});
     final description = place.cuisine.isEmpty ? place.category : place.cuisine;
     return Surface(
       child: Row(
@@ -267,7 +289,7 @@ class _RestaurantCard extends ConsumerWidget {
                   place.name,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
-                Text('$description · $distance'),
+                Text('${context.tr(description)} · $distance'),
                 TextButton.icon(
                   onPressed: () async {
                     final opened = await ref.read(urlOpenerProvider)(
@@ -275,14 +297,16 @@ class _RestaurantCard extends ConsumerWidget {
                     );
                     if (!opened && context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Directions could not be opened.'),
+                        SnackBar(
+                          content: Text(
+                            context.tr('Directions could not be opened.'),
+                          ),
                         ),
                       );
                     }
                   },
                   icon: const Icon(Icons.directions_outlined),
-                  label: const Text('Directions'),
+                  label: Text(context.tr('Directions')),
                 ),
               ],
             ),

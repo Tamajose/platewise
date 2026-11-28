@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../theme/plate_theme.dart';
+import '../../core/l10n/l10n.dart';
 
 class PlateMark extends StatelessWidget {
   const PlateMark({super.key, this.size = 34});
@@ -25,7 +26,7 @@ class Wordmark extends StatelessWidget {
       if (constraints.maxWidth < 80) {
         final size = constraints.maxWidth.clamp(0.0, 34.0);
         return Semantics(
-          label: 'PlateWise',
+          label: context.tr('PlateWise'),
           child: Align(
             alignment: Alignment.centerLeft,
             child: PlateMark(size: size),
@@ -39,7 +40,7 @@ class Wordmark extends StatelessWidget {
           const SizedBox(width: 9),
           Flexible(
             child: Text(
-              'PlateWise',
+              context.tr('PlateWise'),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.titleLarge

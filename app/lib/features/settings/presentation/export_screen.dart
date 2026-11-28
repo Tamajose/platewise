@@ -8,6 +8,7 @@ import '../../../core/widgets/widgets.dart';
 import '../data/export_providers.dart';
 import '../domain/stats_export.dart';
 import 'export_controller.dart';
+import '../../../core/l10n/l10n.dart';
 
 const _presets = [
   (label: '1 week', days: 7),
@@ -29,46 +30,54 @@ class ExportScreen extends ConsumerWidget {
     final result = state.result;
     final style = Theme.of(context).textTheme;
     return Standalone(
-      title: 'Export stats',
+      title: context.tr('Export stats'),
       body: PageScroll(
         children: [
-          const PageHeading(
-            'Export your stats',
-            detail: 'Daily calorie estimates, targets and water as a spreadsheet file.',
+          PageHeading(
+            context.tr('Export your stats'),
+            detail: context.tr(
+              'Daily calorie estimates, targets and water as a spreadsheet file.',
+            ),
           ),
           const SizedBox(height: 20),
           if (!allowed) ...[
-            const Surface(
+            Surface(
               child: Text(
-                'Exporting is off. A file leaves the protection of the app, so PlateWise asks first. You can turn it off again under Data and privacy in Settings.',
+                context.tr(
+                  'Exporting is off. A file leaves the protection of the app, so PlateWise asks first. You can turn it off again under Data and privacy in Settings.',
+                ),
               ),
             ),
             const SizedBox(height: 14),
             PrimaryButton(
-              'Allow data export',
+              context.tr('Allow data export'),
               icon: Icons.lock_open_rounded,
               onPressed: () =>
                   ref.read(exportPermissionProvider.notifier).set(true),
             ),
             TextButton(
               onPressed: () => context.push(Routes.settings),
-              child: const Text('Open Settings'),
+              child: Text(context.tr('Open Settings')),
             ),
           ] else ...[
             Surface(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Period', style: style.titleMedium),
+                  Text(context.tr('Period'), style: style.titleMedium),
                   const SizedBox(height: 4),
-                  Text('Last ${state.days} days', style: style.headlineSmall),
+                  Text(
+                    context.tr('Last {p0} days', {'p0': state.days}),
+                    style: style.headlineSmall,
+                  ),
                   Slider(
                     value: state.days.toDouble(),
                     min: minExportDays.toDouble(),
                     max: maxExportDays.toDouble(),
                     divisions: maxExportDays - minExportDays,
-                    label: '${state.days} days',
-                    semanticFormatterCallback: (v) => '${v.round()} days',
+                    label: context.tr('{p0} days', {'p0': state.days}),
+                    semanticFormatterCallback: (v) =>
+                        context.tr('{p0} days', {'p0': v.round()}),
                     onChanged: state.busy
                         ? null
                         : (v) => controller.setDays(v.round()),
@@ -79,7 +88,7 @@ class ExportScreen extends ConsumerWidget {
                     children: [
                       for (final preset in _presets)
                         ChoiceChip(
-                          label: Text(preset.label),
+                          label: Text(context.tr(preset.label)),
                           selected: state.days == preset.days,
                           onSelected: state.busy
                               ? null
@@ -89,7 +98,9 @@ class ExportScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'From one week to one year. Days before your first record are left out.',
+                    context.tr(
+                      'From one week to one year. Days before your first record are left out.',
+                    ),
                     style: style.bodySmall?.copyWith(color: PlateColors.muted),
                   ),
                 ],
@@ -101,24 +112,24 @@ class ExportScreen extends ConsumerWidget {
               const SizedBox(height: 10),
             ],
             PrimaryButton(
-              'Prepare export',
+              context.tr('Prepare export'),
               icon: Icons.table_chart_outlined,
               busy: state.busy,
               onPressed: controller.prepare,
             ),
-            if (state.busy) const LoadingState('Gathering your records…'),
+            if (state.busy) LoadingState(context.tr('Gathering your records…')),
             if (result != null) ...[
               const SizedBox(height: 16),
               _Summary(result),
               const SizedBox(height: 12),
               PrimaryButton(
-                'Save CSV file',
+                context.tr('Save CSV file'),
                 icon: Icons.download_rounded,
                 onPressed: controller.save,
               ),
               const SizedBox(height: 8),
               SecondaryButton(
-                'Copy to clipboard',
+                context.tr('Copy to clipboard'),
                 icon: Icons.copy_rounded,
                 onPressed: controller.copy,
               ),
@@ -127,13 +138,15 @@ class ExportScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               Semantics(
                 liveRegion: true,
-                child: Surface(child: Text(state.notice!)),
+                child: Surface(child: Text(context.tr(state.notice!))),
               ),
             ],
           ],
           const SizedBox(height: 18),
-          const DisclaimerNotice(
-            text: 'Calories are estimates shown as ranges. The file holds personal health information, so keep it somewhere private.',
+          DisclaimerNotice(
+            text: context.tr(
+              'Calories are estimates shown as ranges. The file holds personal health information, so keep it somewhere private.',
+            ),
           ),
         ],
       ),
@@ -152,15 +165,26 @@ class _Summary extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Ready to export', style: style.titleMedium),
+          Text(context.tr('Ready to export'), style: style.titleMedium),
           const SizedBox(height: 6),
           Text(
-            '${result.days} days · ${result.loggedDays} with meals · ${result.mealCount} meals',
+            context.tr('{p0} days · {p1} with meals · {p2} meals', {
+              'p0': result.days,
+              'p1': result.loggedDays,
+              'p2': result.mealCount,
+            }),
           ),
           if (result.shortened) ...[
             const SizedBox(height: 6),
             Text(
-              'You asked for ${result.requestedDays} days, but your records cover ${result.availableDays}, so the file holds ${result.days}.',
+              context.tr(
+                'You asked for {p0} days, but your records cover {p1}, so the file holds {p2}.',
+                {
+                  'p0': result.requestedDays,
+                  'p1': result.availableDays,
+                  'p2': result.days,
+                },
+              ),
               style: style.bodySmall?.copyWith(color: PlateColors.muted),
             ),
           ],

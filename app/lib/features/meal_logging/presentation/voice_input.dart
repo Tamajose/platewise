@@ -7,6 +7,7 @@ import '../../../core/widgets/widgets.dart';
 import '../domain/voice.dart';
 import 'capture_controller.dart';
 import 'voice_controller.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// The voice tab: record a note, or type or edit the transcript.
 class VoiceInput extends ConsumerWidget {
@@ -35,10 +36,12 @@ class VoiceInput extends ConsumerWidget {
         if (caps?.banglaSpeech == true) ...[
           DropdownButtonFormField<String>(
             initialValue: voice.locale,
-            decoration: const InputDecoration(labelText: 'Recording language'),
-            items: const [
-              DropdownMenuItem(value: 'en', child: Text('English')),
-              DropdownMenuItem(value: 'bn', child: Text('Bangla')),
+            decoration: InputDecoration(
+              labelText: context.tr('Recording language'),
+            ),
+            items: [
+              DropdownMenuItem(value: 'en', child: Text(context.tr('English'))),
+              DropdownMenuItem(value: 'bn', child: Text(context.tr('Bangla'))),
             ],
             onChanged: voice.listening || voice.busy
                 ? null
@@ -46,15 +49,19 @@ class VoiceInput extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
         ] else
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(bottom: 8),
             child: Text(
-              'Bangla speech is unavailable here. You can type food names in manual entry.',
+              context.tr(
+                'Bangla speech is unavailable here. You can type food names in manual entry.',
+              ),
             ),
           ),
         if (allowLive)
           SecondaryButton(
-            voice.listening ? 'Stop and transcribe' : 'Record voice note',
+            voice.listening
+                ? context.tr('Stop and transcribe')
+                : context.tr('Record voice note'),
             onPressed: voice.busy
                 ? null
                 : voice.listening
@@ -66,27 +73,32 @@ class VoiceInput extends ConsumerWidget {
           )
         else if (demo)
           SecondaryButton(
-            'Use sample transcript',
+            context.tr('Use sample transcript'),
             icon: Icons.mic_none_rounded,
             onPressed: () => ref
                 .read(captureControllerProvider.notifier)
                 .useTranscript('One cup of rice and a bowl of dal', 'en'),
           )
         else
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(bottom: 6),
             child: Text(
-              'Live transcription is unavailable. Type the description to continue.',
+              context.tr(
+                'Live transcription is unavailable. Type the description to continue.',
+              ),
             ),
           ),
         if (voice.listening)
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(top: 7),
             child: Text(
-              'Recording · stops after $maxVoiceSeconds seconds. Say only the foods and portions.',
+              context.tr(
+                'Recording · stops after {p0} seconds. Say only the foods and portions.',
+                {'p0': maxVoiceSeconds},
+              ),
             ),
           ),
-        if (voice.busy) const LoadingState('Preparing voice entry…'),
+        if (voice.busy) LoadingState(context.tr('Preparing voice entry…')),
         if (voice.error != null) ...[
           const SizedBox(height: 8),
           ErrorState(voice.error!),
@@ -100,15 +112,16 @@ class VoiceInput extends ConsumerWidget {
           minLines: 3,
           maxLines: 6,
           maxLength: maxDescriptionLength,
+          buildCounter: context.counterBuilder,
           enabled: !voice.listening && !voice.busy,
-          decoration: const InputDecoration(
-            labelText: 'Review or type transcript',
+          decoration: InputDecoration(
+            labelText: context.tr('Review or type transcript'),
             alignLabelWithHint: true,
           ),
         ),
         TextButton(
           onPressed: voice.listening || voice.busy ? null : useTyped,
-          child: const Text('Switch to typed entry'),
+          child: Text(context.tr('Switch to typed entry')),
         ),
       ],
     );

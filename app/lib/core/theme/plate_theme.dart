@@ -17,7 +17,9 @@ abstract final class PlateColors {
   static const red = Color(0xFF9D302B);
 }
 
-ThemeData plateTheme() {
+/// The app's theme. In Bangla the Bangla font leads and lines are taller,
+/// because the script is taller than Latin text.
+ThemeData plateTheme({bool bangla = false}) {
   final scheme = ColorScheme.fromSeed(seedColor: PlateColors.forest).copyWith(
     primary: PlateColors.forest,
     onPrimary: Colors.white,
@@ -34,7 +36,7 @@ ThemeData plateTheme() {
   final base = ThemeData(
     useMaterial3: true,
     colorScheme: scheme,
-    fontFamily: 'Inter',
+    fontFamily: bangla ? 'NotoSansBengali' : 'Inter',
     scaffoldBackgroundColor: PlateColors.canvas,
   );
   const tabular = [FontFeature.tabularFigures()];
@@ -95,7 +97,10 @@ ThemeData plateTheme() {
         .apply(
           bodyColor: PlateColors.ink,
           displayColor: PlateColors.ink,
-          fontFamilyFallback: const ['NotoSansBengali'],
+          fontFamilyFallback: bangla
+              ? const ['Inter']
+              : const ['NotoSansBengali'],
+          heightFactor: bangla ? 1.12 : 1.0,
         ),
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: {

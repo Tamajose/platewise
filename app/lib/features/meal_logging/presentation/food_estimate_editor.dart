@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../core/domain/domain.dart';
 import '../../../core/widgets/widgets.dart';
 import '../domain/food_entry.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// A bottom sheet for adding a food or changing a food's portion. Pops with
 /// the new [FoodItem].
@@ -102,20 +103,23 @@ class _FoodEstimateEditorState extends State<FoodEstimateEditor> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                widget.initial == null ? 'Add food' : 'Edit food and portion',
+                widget.initial == null
+                    ? context.tr('Add food')
+                    : context.tr('Edit food and portion'),
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 11),
               TextFormField(
                 controller: name,
                 maxLength: 100,
+                buildCounter: context.counterBuilder,
                 onChanged: (_) => clearForReplacement(),
-                decoration: const InputDecoration(
-                  labelText: 'Food name',
+                decoration: InputDecoration(
+                  labelText: context.tr('Food name'),
                   counterText: '',
                 ),
                 validator: (v) =>
-                    v!.trim().isEmpty ? 'Enter a food name.' : null,
+                    v!.trim().isEmpty ? context.tr('Enter a food name.') : null,
               ),
               const SizedBox(height: 11),
               TextFormField(
@@ -124,14 +128,16 @@ class _FoodEstimateEditorState extends State<FoodEstimateEditor> {
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                decoration: const InputDecoration(labelText: 'Quantity'),
+                decoration: InputDecoration(labelText: context.tr('Quantity')),
                 validator: (v) =>
                     parseQuantity(v ?? '') == null ? quantityMessage : null,
               ),
               const SizedBox(height: 11),
               DropdownButtonFormField<String>(
                 initialValue: unit,
-                decoration: const InputDecoration(labelText: 'Portion unit'),
+                decoration: InputDecoration(
+                  labelText: context.tr('Portion unit'),
+                ),
                 items: [
                   for (final value in foodUnits)
                     DropdownMenuItem(value: value, child: Text(value)),
@@ -150,7 +156,7 @@ class _FoodEstimateEditorState extends State<FoodEstimateEditor> {
                   controller: entry.$1,
                   onChanged: (_) => customRange = true,
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: entry.$2),
+                  decoration: InputDecoration(labelText: context.tr(entry.$2)),
                   validator: (v) =>
                       parseCalories(v ?? '') == null ? caloriesMessage : null,
                 ),
@@ -161,13 +167,18 @@ class _FoodEstimateEditorState extends State<FoodEstimateEditor> {
                 const SizedBox(height: 8),
               ],
               if (replaced && widget.initial != null)
-                const Padding(
+                Padding(
                   padding: EdgeInsets.only(bottom: 8),
                   child: Text(
-                    'Enter a new range for this food or unit. Nutrients will be shown as unavailable.',
+                    context.tr(
+                      'Enter a new range for this food or unit. Nutrients will be shown as unavailable.',
+                    ),
                   ),
                 ),
-              PrimaryButton('Apply food changes', onPressed: submit),
+              PrimaryButton(
+                context.tr('Apply food changes'),
+                onPressed: submit,
+              ),
             ],
           ),
         ),

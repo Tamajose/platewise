@@ -4,7 +4,11 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show ProviderListenable;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 import 'package:platewise/core/domain/domain.dart';
+import 'package:platewise/core/l10n/app_language.dart';
+import 'package:platewise/core/l10n/language_providers.dart';
 import 'package:platewise/core/presentation/review_args.dart';
 import 'package:platewise/core/presentation/session_state.dart';
 import 'package:platewise/features/meal_logging/domain/voice.dart';
@@ -21,23 +25,38 @@ T hold<T>(ProviderContainer container, ProviderListenable<T> provider) {
 }
 
 void main() {
+  setUp(() {
+    SharedPreferencesAsyncPlatform.instance =
+        InMemorySharedPreferencesAsync.empty();
+  });
   group('capture', () {
-    test('starts with the profile language', () async {
-      final rig = Rig(
-        overview: const Overview(
-          profile: Profile(
-            height: 170,
-            weight: 70,
-            target: null,
-            language: 'bn',
-          ),
-        ),
-      );
-      final container = rig.container();
-      addTearDown(container.dispose);
-      await container.read(overviewProvider.future);
-      expect(hold(container, captureControllerProvider).language, 'bn');
-    });
+    test(
+      'starts with the language of the app when Bangla is available',
+      () async {
+        final rig = Rig(
+          caps: (liveAi: true, banglaText: true, banglaSpeech: false),
+        );
+        final container = rig.container();
+        addTearDown(container.dispose);
+        await container.read(appLanguageProvider.notifier).set(AppLanguage.bn);
+        await container.read(capabilitiesProvider.future);
+        expect(hold(container, captureControllerProvider).language, 'bn');
+      },
+    );
+
+    test(
+      'stays in English when the deployment has no Bangla analysis',
+      () async {
+        final rig = Rig(
+          caps: (liveAi: true, banglaText: false, banglaSpeech: false),
+        );
+        final container = rig.container();
+        addTearDown(container.dispose);
+        await container.read(appLanguageProvider.notifier).set(AppLanguage.bn);
+        await container.read(capabilitiesProvider.future);
+        expect(hold(container, captureControllerProvider).language, 'en');
+      },
+    );
 
     test('estimating needs a photo or at least two characters', () {
       final container = Rig().container();

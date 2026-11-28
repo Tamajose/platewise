@@ -8,6 +8,7 @@ import '../../../core/presentation/routes.dart';
 import '../../../core/presentation/session_state.dart';
 import '../../../core/widgets/widgets.dart';
 import '../data/onboarding_providers.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Builds the profile form. The app supplies it, because the form belongs to
 /// the profile feature and features cannot import each other.
@@ -54,9 +55,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final offersSample = ref
         .watch(onboardingRepositoryProvider)
         .offersSampleDay;
-    const heading = PageHeading(
-      'Decide before you eat',
-      detail: 'Compare portions and calorie ranges. Review each estimate before saving it to your daily log.',
+    final heading = PageHeading(
+      context.tr('Decide before you eat'),
+      detail: context.tr(
+        'Compare portions and calorie ranges. Review each estimate before saving it to your daily log.',
+      ),
       prominent: true,
     );
     final actions = Column(
@@ -67,22 +70,24 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           const SizedBox(height: 8),
         ],
         PrimaryButton(
-          'Set up my profile',
+          context.tr('Set up my profile'),
           icon: Icons.arrow_forward_rounded,
           onPressed: busy ? null : () => setState(() => form = true),
         ),
         const SizedBox(height: 8),
         if (offersSample)
           SecondaryButton(
-            'Explore a sample day',
+            context.tr('Explore a sample day'),
             onPressed: busy ? null : sample,
           )
         else
           TextButton(
             onPressed: () => context.push(Routes.signIn),
-            child: const Text('Sign in to an existing account'),
+            child: Text(context.tr('Sign in to an existing account')),
           ),
-        if (busy) const LoadingState('Opening sample day…'),
+        if (busy) LoadingState(context.tr('Opening sample day…')),
+        const SizedBox(height: 14),
+        const Align(alignment: Alignment.centerLeft, child: LanguageToggle()),
         const SizedBox(height: 14),
         const DisclaimerNotice(),
       ],
@@ -91,10 +96,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       appBar: AppBar(
         title: const Wordmark(),
         actions: [
+          const LanguageSwitchButton(),
           if (demo)
-            const Padding(
+            Padding(
               padding: EdgeInsets.only(right: 16),
-              child: Center(child: IndicatorTag('Demo mode')),
+              child: Center(child: IndicatorTag(context.tr('Demo mode'))),
             ),
         ],
       ),
