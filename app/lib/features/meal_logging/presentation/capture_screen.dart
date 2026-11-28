@@ -11,6 +11,7 @@ import '../../../core/theme/plate_theme.dart';
 import '../../../core/widgets/widgets.dart';
 import 'capture_controller.dart';
 import 'voice_input.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Where a meal starts: a photo, a typed description or a voice note.
 class CaptureScreen extends ConsumerStatefulWidget {
@@ -58,12 +59,14 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     final demo = ref.watch(sessionRepositoryProvider).isDemo;
     final capabilities = ref.watch(capabilitiesProvider).value;
     return Standalone(
-      title: 'Log meal',
+      title: context.tr('Log meal'),
       body: PageScroll(
         children: [
-          const PageHeading(
-            'What did you eat?',
-            detail: 'Review the foods and portions before adding a meal to your log.',
+          PageHeading(
+            context.tr('What did you eat?'),
+            detail: context.tr(
+              'Review the foods and portions before adding a meal to your log.',
+            ),
           ),
           const SizedBox(height: 17),
           Wrap(
@@ -76,7 +79,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                 (CaptureMethod.voice, 'Voice', Icons.mic_none_rounded),
               ])
                 ChoiceChip(
-                  label: Text(option.$2),
+                  label: Text(context.tr(option.$2)),
                   avatar: Icon(option.$3, size: 18),
                   selected: state.method == option.$1,
                   onSelected: state.busy
@@ -91,7 +94,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
             if (state.photo != null)
               FoodPicture(bytes: state.photo)
             else
-              const Surface(
+              Surface(
                 color: PlateColors.sage,
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 22),
@@ -103,7 +106,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                         size: 30,
                       ),
                       SizedBox(height: 8),
-                      Text('Add a photo of your meal'),
+                      Text(context.tr('Add a photo of your meal')),
                     ],
                   ),
                 ),
@@ -114,14 +117,18 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
               runSpacing: 8,
               children: [
                 SecondaryButton(
-                  state.photo == null ? 'Camera' : 'Retake',
+                  state.photo == null
+                      ? context.tr('Camera')
+                      : context.tr('Retake'),
                   icon: Icons.photo_camera_outlined,
                   onPressed: state.busy
                       ? null
                       : () => controller.pickPhoto(PhotoSource.camera),
                 ),
                 SecondaryButton(
-                  state.photo == null ? 'Gallery' : 'Replace',
+                  state.photo == null
+                      ? context.tr('Gallery')
+                      : context.tr('Replace'),
                   icon: Icons.photo_library_outlined,
                   onPressed: state.busy
                       ? null
@@ -131,14 +138,16 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              'Keep people and personal information out of the photo.',
+              context.tr(
+                'Keep people and personal information out of the photo.',
+              ),
               style: Theme.of(context).textTheme.bodySmall
                   ?.copyWith(color: PlateColors.muted),
             ),
             if (demo) ...[
               const SizedBox(height: 12),
               SecondaryButton(
-                'Review sample photo estimate',
+                context.tr('Review sample photo estimate'),
                 onPressed: state.busy
                     ? null
                     : () => openReview(controller.sampleReview()!),
@@ -157,45 +166,59 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
               minLines: 3,
               maxLines: 6,
               maxLength: maxDescriptionLength,
-              decoration: const InputDecoration(
-                labelText: 'Describe the meal',
+              buildCounter: context.counterBuilder,
+              decoration: InputDecoration(
+                labelText: context.tr('Describe the meal'),
                 alignLabelWithHint: true,
-                hintText: 'Example: 1 cup of rice and 1 bowl of dal',
+                hintText: context.tr(
+                  'Example: 1 cup of rice and 1 bowl of dal',
+                ),
               ),
             ),
             if (capabilities?.banglaText ?? false)
               DropdownButtonFormField<String>(
                 key: ValueKey(state.language),
                 initialValue: state.language,
-                decoration: const InputDecoration(labelText: 'Input language'),
-                items: const [
-                  DropdownMenuItem(value: 'en', child: Text('English')),
-                  DropdownMenuItem(value: 'bn', child: Text('Bangla')),
+                decoration: InputDecoration(
+                  labelText: context.tr('Input language'),
+                ),
+                items: [
+                  DropdownMenuItem(
+                    value: 'en',
+                    child: Text(context.tr('English')),
+                  ),
+                  DropdownMenuItem(
+                    value: 'bn',
+                    child: Text(context.tr('Bangla')),
+                  ),
                 ],
                 onChanged: state.busy
                     ? null
                     : (value) => controller.setLanguage(value!),
               ),
             if (demo)
-              const DisclaimerNotice(
-                text: 'Demo lookup supports a few sample dishes including rice, dal, khichuri and chicken tikka.',
+              DisclaimerNotice(
+                text: context.tr(
+                  'Demo lookup supports a few sample dishes including rice, dal, khichuri and chicken tikka.',
+                ),
               ),
           ],
           const SizedBox(height: 16),
-          if (state.busy) const LoadingState('Preparing your meal estimate…'),
+          if (state.busy)
+            LoadingState(context.tr('Preparing your meal estimate…')),
           if (state.error != null) ...[
             ErrorState(state.error!),
             const SizedBox(height: 9),
           ],
           PrimaryButton(
-            'Estimate meal',
+            context.tr('Estimate meal'),
             icon: Icons.auto_awesome_outlined,
             busy: state.busy,
             onPressed: state.canEstimate ? estimate : null,
           ),
           const SizedBox(height: 9),
           SecondaryButton(
-            'Enter meal manually',
+            context.tr('Enter meal manually'),
             icon: Icons.edit_note,
             onPressed: state.busy
                 ? null

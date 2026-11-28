@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../theme/plate_theme.dart';
+import '../../core/l10n/l10n.dart';
 
 class ConfirmationSheet extends StatelessWidget {
   const ConfirmationSheet({
@@ -41,7 +42,7 @@ class ConfirmationSheet extends StatelessWidget {
         children: [
           Text(title, style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 9),
-          Text(message),
+          Text(context.tr(message)),
           const SizedBox(height: 18),
           FilledButton(
             style: danger
@@ -52,7 +53,7 @@ class ConfirmationSheet extends StatelessWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.tr('Cancel')),
           ),
         ],
       ),

@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../core/data/core_providers.dart';
-import '../../../core/format/number_format.dart';
 import '../../../core/presentation/failure_message.dart';
 import '../../../core/presentation/routes.dart';
 import '../../../core/presentation/session_state.dart';
@@ -11,6 +10,7 @@ import '../../../core/theme/plate_theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../data/export_providers.dart';
 import 'settings_controller.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Profile summary, account, language, privacy and data deletion.
 class SettingsScreen extends ConsumerWidget {
@@ -18,7 +18,7 @@ class SettingsScreen extends ConsumerWidget {
 
   void say(BuildContext context, String message) =>
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(message)));
+          .showSnackBar(SnackBar(content: Text(context.tr(message))));
 
   Future<void> erase(
     BuildContext context,
@@ -32,16 +32,24 @@ class SettingsScreen extends ConsumerWidget {
         await ConfirmationSheet.ask(
           context,
           title: account
-              ? 'Delete your account?'
+              ? context.tr('Delete your account?')
               : demo
-              ? 'Clear this demo?'
-              : 'Delete your app data?',
+              ? context.tr('Clear this demo?')
+              : context.tr('Delete your app data?'),
           message: account
-              ? 'This permanently removes your profile, logs, corrections, photos and sign-in identity.'
+              ? context.tr(
+                  'This permanently removes your profile, logs, corrections, photos and sign-in identity.',
+                )
               : demo
-              ? 'This removes the profile and all local demo logs on this device.'
-              : 'This removes your profile, logs, corrections and photos. Your sign-in identity stays available.',
-          action: account ? 'Delete account' : 'Delete data',
+              ? context.tr(
+                  'This removes the profile and all local demo logs on this device.',
+                )
+              : context.tr(
+                  'This removes your profile, logs, corrections and photos. Your sign-in identity stays available.',
+                ),
+          action: account
+              ? context.tr('Delete account')
+              : context.tr('Delete data'),
           danger: true,
         );
     if (!proceed || !context.mounted) return;
@@ -53,7 +61,9 @@ class SettingsScreen extends ConsumerWidget {
     // Nothing is left to show, so go straight to the welcome screen.
     context.go(Routes.welcome);
     messenger.showSnackBar(
-      SnackBar(content: Text(account ? 'Account deleted' : 'Data deleted')),
+      SnackBar(
+        content: Text(context.tr(account ? 'Account deleted' : 'Data deleted')),
+      ),
     );
   }
 
@@ -65,12 +75,13 @@ class SettingsScreen extends ConsumerWidget {
     final controller = ref.read(settingsControllerProvider.notifier);
     final busy = state.busy;
     return Standalone(
-      title: 'Settings',
+      title: context.tr('Settings'),
       body: ref
           .watch(overviewProvider)
           .when(
-            loading: () =>
-                const PageScroll(children: [LoadingState('Loading settings…')]),
+            loading: () => PageScroll(
+              children: [LoadingState(context.tr('Loading settings…'))],
+            ),
             error: (e, _) => PageScroll(
               children: [
                 ErrorState(
@@ -83,22 +94,25 @@ class SettingsScreen extends ConsumerWidget {
               final profile = value.profile;
               return PageScroll(
                 children: [
-                  const PageHeading('Profile & privacy'),
+                  PageHeading(context.tr('Profile & privacy')),
                   const SizedBox(height: 14),
                   if (state.error != null) ...[
                     ErrorState(state.error!),
                     const SizedBox(height: 10),
                   ],
-                  if (busy) const LoadingState('Working on your request…'),
+                  if (busy)
+                    LoadingState(context.tr('Working on your request…')),
                   if (value.deletionPending) ...[
-                    const ErrorState(
-                      'Deletion is pending. Resume the request to remove any remaining data.',
+                    ErrorState(
+                      context.tr(
+                        'Deletion is pending. Resume the request to remove any remaining data.',
+                      ),
                     ),
                     const SizedBox(height: 9),
                     PrimaryButton(
                       value.deletionAccount
-                          ? 'Resume account deletion'
-                          : 'Resume data deletion',
+                          ? context.tr('Resume account deletion')
+                          : context.tr('Resume data deletion'),
                       busy: busy,
                       onPressed: () => erase(
                         context,
@@ -114,31 +128,45 @@ class SettingsScreen extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const SectionTitle('Profile'),
+                            SectionTitle(context.tr('Profile')),
                             const SizedBox(height: 8),
                             Text(
-                              'BMI ${profile.bmi.toStringAsFixed(1)} · ${profile.zone}',
+                              context.tr('BMI {p0} · {p1}', {
+                                'p0': profile.bmi.toStringAsFixed(1),
+                                'p1': profile.zone,
+                              }),
                             ),
                             Text(
                               profile.target == null
-                                  ? 'No calorie target'
-                                  : 'Daily target ${number(profile.target!)} kcal',
+                                  ? context.tr('No calorie target')
+                                  : context.tr('Daily target {p0} kcal', {
+                                      'p0': context.number(profile.target!),
+                                    }),
                             ),
                             Text(
-                              'Water goal ${number(profile.waterGoal)} ml · ${profile.units == 'us' ? 'US' : 'Metric'} units',
+                              context.tr('Water goal {p0} ml · {p1} units', {
+                                'p0': context.number(profile.waterGoal),
+                                'p1': context.tr(
+                                  profile.units == 'us' ? 'US' : 'Metric',
+                                ),
+                              }),
                             ),
                             const SizedBox(height: 9),
-                            const DisclaimerNotice(
-                              text: 'BMI is a screening measure. PlateWise does not give medical advice.',
+                            DisclaimerNotice(
+                              text: context.tr(
+                                'BMI is a screening measure. PlateWise does not give medical advice.',
+                              ),
                             ),
                             const SizedBox(height: 9),
                             SecondaryButton(
-                              'Edit profile and goals',
+                              context.tr('Edit profile and goals'),
                               onPressed: () => context.push(Routes.profile),
                             ),
                             TextButton(
                               onPressed: () => context.push(Routes.energy),
-                              child: const Text('Estimate adult energy needs'),
+                              child: Text(
+                                context.tr('Estimate adult energy needs'),
+                              ),
                             ),
                           ],
                         ),
@@ -149,15 +177,21 @@ class SettingsScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const SectionTitle('Account'),
+                          SectionTitle(context.tr('Account')),
                           const SizedBox(height: 6),
                           Text(
-                            demo ? 'Changes stay on this device in demo mode.' : 'Keep the same guest ID when adding a verified email and password.',
+                            demo
+                                ? context.tr(
+                                    'Changes stay on this device in demo mode.',
+                                  )
+                                : context.tr(
+                                    'Keep the same guest ID when adding a verified email and password.',
+                                  ),
                           ),
                           if (!demo)
                             TextButton(
                               onPressed: () => context.push(Routes.account),
-                              child: const Text('Manage account'),
+                              child: Text(context.tr('Manage account')),
                             ),
                         ],
                       ),
@@ -167,17 +201,38 @@ class SettingsScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const SectionTitle('Language'),
-                          const SizedBox(height: 5),
-                          const Text('App interface: English'),
+                          SectionTitle(context.tr('Language')),
+                          const SizedBox(height: 6),
                           Text(
-                            'Bangla text analysis: ${capability?.banglaText == true ? 'enabled by this deployment' : 'unavailable'}',
+                            context.tr(
+                              "Language of the app and of the AI's answers.",
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          const LanguageToggle(),
+                          const SizedBox(height: 10),
+                          Text(
+                            context.tr('Bangla text analysis: {p0}', {
+                              'p0': context.tr(
+                                capability?.banglaText == true
+                                    ? 'enabled by this deployment'
+                                    : 'unavailable',
+                              ),
+                            }),
                           ),
                           Text(
-                            'Bangla speech: ${capability?.banglaSpeech == true ? 'enabled by this deployment' : 'unavailable'}',
+                            context.tr('Bangla speech: {p0}', {
+                              'p0': context.tr(
+                                capability?.banglaSpeech == true
+                                    ? 'enabled by this deployment'
+                                    : 'unavailable',
+                              ),
+                            }),
                           ),
-                          const Text(
-                            'You can type Bangla food names in manual entry.',
+                          Text(
+                            context.tr(
+                              'The AI answers in Bangla only where this deployment has Bangla turned on. Otherwise it answers in English.',
+                            ),
                           ),
                         ],
                       ),
@@ -187,12 +242,16 @@ class SettingsScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const SectionTitle('Data and privacy'),
+                          SectionTitle(context.tr('Data and privacy')),
                           const SizedBox(height: 7),
                           Text(
                             demo
-                                ? 'Demo data is stored locally in this app. Use sample information.'
-                                : 'Meals and photos stay private to your account. Live analysis sends the selected input to the configured provider. Avoid personal information in photos, recordings and descriptions.',
+                                ? context.tr(
+                                    'Demo data is stored locally in this app. Use sample information.',
+                                  )
+                                : context.tr(
+                                    'Meals and photos stay private to your account. Live analysis sends the selected input to the configured provider. Avoid personal information in photos, recordings and descriptions.',
+                                  ),
                           ),
                           const SizedBox(height: 6),
                           if (!demo && profile != null) ...[
@@ -201,11 +260,13 @@ class SettingsScreen extends ConsumerWidget {
                               child: SwitchListTile(
                                 value: profile.correctionConsent,
                                 contentPadding: EdgeInsets.zero,
-                                title: const Text(
-                                  'Allow correction contributions',
+                                title: Text(
+                                  context.tr('Allow correction contributions'),
                                 ),
-                                subtitle: const Text(
-                                  'Opt in to submit a curated food, portion and range. Turning it off removes your queued contributions.',
+                                subtitle: Text(
+                                  context.tr(
+                                    'Opt in to submit a curated food, portion and range. Turning it off removes your queued contributions.',
+                                  ),
                                 ),
                                 onChanged: busy
                                     ? null
@@ -217,7 +278,9 @@ class SettingsScreen extends ConsumerWidget {
                                 onPressed: busy
                                     ? null
                                     : () => context.push(Routes.correction),
-                                child: const Text('Submit a food correction'),
+                                child: Text(
+                                  context.tr('Submit a food correction'),
+                                ),
                               ),
                           ],
                           Material(
@@ -227,9 +290,11 @@ class SettingsScreen extends ConsumerWidget {
                                   ref.watch(exportPermissionProvider).value ??
                                   false,
                               contentPadding: EdgeInsets.zero,
-                              title: const Text('Allow data export'),
-                              subtitle: const Text(
-                                'Lets this device save your daily stats as a file. Off by default, and you can turn it off at any time.',
+                              title: Text(context.tr('Allow data export')),
+                              subtitle: Text(
+                                context.tr(
+                                  'Lets this device save your daily stats as a file. Off by default, and you can turn it off at any time.',
+                                ),
                               ),
                               onChanged: busy
                                   ? null
@@ -242,19 +307,21 @@ class SettingsScreen extends ConsumerWidget {
                               false)
                             TextButton(
                               onPressed: () => context.push(Routes.export),
-                              child: const Text('Export my stats'),
+                              child: Text(context.tr('Export my stats')),
                             ),
                           if (value.pendingAssets > 0)
                             SecondaryButton(
-                              'Retry photo cleanup',
+                              context.tr('Retry photo cleanup'),
                               onPressed: busy
                                   ? null
                                   : controller.retryPhotoCleanup,
                             ),
                           const SizedBox(height: 7),
                           if (!demo)
-                            const Text(
-                              'Unconfirmed photos are eligible for cleanup after 24 hours. Raw recordings are processed in memory. Provider logs and backups follow their retention policies.',
+                            Text(
+                              context.tr(
+                                'Unconfirmed photos are eligible for cleanup after 24 hours. Raw recordings are processed in memory. Provider logs and backups follow their retention policies.',
+                              ),
                             ),
                           const SizedBox(height: 9),
                           OutlinedButton(
@@ -271,7 +338,9 @@ class SettingsScreen extends ConsumerWidget {
                               foregroundColor: PlateColors.red,
                             ),
                             child: Text(
-                              demo ? 'Clear demo data' : 'Delete app data',
+                              demo
+                                  ? context.tr('Clear demo data')
+                                  : context.tr('Delete app data'),
                             ),
                           ),
                           if (!demo)
@@ -288,7 +357,7 @@ class SettingsScreen extends ConsumerWidget {
                               style: TextButton.styleFrom(
                                 foregroundColor: PlateColors.red,
                               ),
-                              child: const Text('Delete account'),
+                              child: Text(context.tr('Delete account')),
                             ),
                         ],
                       ),
@@ -299,9 +368,11 @@ class SettingsScreen extends ConsumerWidget {
                         type: MaterialType.transparency,
                         child: ListTile(
                           contentPadding: EdgeInsets.zero,
-                          title: const Text('Credits and licenses'),
-                          subtitle: const Text(
-                            'Team, datasets and open-source libraries',
+                          title: Text(context.tr('Credits and licenses')),
+                          subtitle: Text(
+                            context.tr(
+                              'Team, datasets and open-source libraries',
+                            ),
                           ),
                           trailing: const Icon(Icons.chevron_right),
                           onTap: () => context.push(Routes.credits),

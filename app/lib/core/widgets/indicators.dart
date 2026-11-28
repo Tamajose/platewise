@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../l10n/l10n.dart';
 import '../theme/plate_theme.dart';
 
 class IndicatorTag extends StatelessWidget {
@@ -59,7 +60,7 @@ class DisclaimerNotice extends StatelessWidget {
       const SizedBox(width: 8),
       Expanded(
         child: Text(
-          text,
+          context.tr(text),
           style: Theme.of(context).textTheme.bodySmall
               ?.copyWith(color: PlateColors.muted),
         ),

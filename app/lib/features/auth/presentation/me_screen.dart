@@ -4,7 +4,6 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../core/data/core_providers.dart';
 import '../../../core/domain/domain.dart';
-import '../../../core/format/number_format.dart';
 import '../../../core/presentation/failure_message.dart';
 import '../../../core/presentation/routes.dart';
 import '../../../core/presentation/session_state.dart';
@@ -13,6 +12,7 @@ import '../../../core/widgets/widgets.dart';
 import '../data/account_providers.dart';
 import '../domain/account_info.dart';
 import 'account_controller.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// The person's own page: who they are, their body measures and goals, and the
 /// way to manage the account or sign out.
@@ -26,11 +26,13 @@ class MeScreen extends ConsumerWidget {
   ) async {
     final yes = await ConfirmationSheet.ask(
       context,
-      title: 'Sign out?',
+      title: context.tr('Sign out?'),
       message: account.guest
-          ? 'This is a guest log. Without a linked email it cannot be reopened after you sign out. Link an email first to keep it.'
-          : 'You can reopen this account by signing in again.',
-      action: 'Sign out',
+          ? context.tr(
+              'This is a guest log. Without a linked email it cannot be reopened after you sign out. Link an email first to keep it.',
+            )
+          : context.tr('You can reopen this account by signing in again.'),
+      action: context.tr('Sign out'),
       danger: account.guest,
     );
     if (!yes || !context.mounted) return;
@@ -46,12 +48,13 @@ class MeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final demo = ref.watch(sessionRepositoryProvider).isDemo;
     return Standalone(
-      title: 'Profile',
+      title: context.tr('Profile'),
       body: ref
           .watch(overviewProvider)
           .when(
-            loading: () =>
-                const PageScroll(children: [LoadingState('Loading profile…')]),
+            loading: () => PageScroll(
+              children: [LoadingState(context.tr('Loading profile…'))],
+            ),
             error: (e, _) => PageScroll(
               children: [
                 ErrorState(
@@ -65,8 +68,10 @@ class MeScreen extends ConsumerWidget {
                 : ref
                       .watch(accountProvider)
                       .when(
-                        loading: () => const PageScroll(
-                          children: [LoadingState('Loading profile…')],
+                        loading: () => PageScroll(
+                          children: [
+                            LoadingState(context.tr('Loading profile…')),
+                          ],
                         ),
                         error: (e, _) => _body(
                           context,
@@ -134,12 +139,19 @@ class MeScreen extends ConsumerWidget {
                   'Daily target',
                   profile.target == null
                       ? 'Not set'
-                      : '${number(profile.target!)} kcal',
+                      : context.tr('{p0} kcal', {
+                          'p0': context.number(profile.target!),
+                        }),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: _Stat('Water goal', '${number(profile.waterGoal)} ml'),
+                child: _Stat(
+                  'Water goal',
+                  context.tr('{p0} ml', {
+                    'p0': context.number(profile.waterGoal),
+                  }),
+                ),
               ),
             ],
           ),
@@ -150,18 +162,28 @@ class MeScreen extends ConsumerWidget {
                 _Row(
                   'Height',
                   imperial
-                      ? '${profile.displayHeight.toStringAsFixed(1)} in'
-                      : '${profile.displayHeight.toStringAsFixed(0)} cm',
+                      ? context.tr('{p0} in', {
+                          'p0': profile.displayHeight.toStringAsFixed(1),
+                        })
+                      : context.tr('{p0} cm', {
+                          'p0': profile.displayHeight.toStringAsFixed(0),
+                        }),
                 ),
                 _Row(
                   'Weight',
                   imperial
-                      ? '${profile.displayWeight.toStringAsFixed(1)} lb'
-                      : '${profile.displayWeight.toStringAsFixed(1)} kg',
+                      ? context.tr('{p0} lb', {
+                          'p0': profile.displayWeight.toStringAsFixed(1),
+                        })
+                      : context.tr('{p0} kg', {
+                          'p0': profile.displayWeight.toStringAsFixed(1),
+                        }),
                 ),
                 _Row(
                   'BMI',
-                  '${profile.bmi.toStringAsFixed(1)} · screening only',
+                  context.tr('{p0} · screening only', {
+                    'p0': profile.bmi.toStringAsFixed(1),
+                  }),
                 ),
                 _Row('Units', imperial ? 'US' : 'Metric'),
                 _Row('Time zone', profile.zone, last: true),
@@ -170,16 +192,34 @@ class MeScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 14),
           SecondaryButton(
-            'Edit profile and goals',
+            context.tr('Edit profile and goals'),
             icon: Icons.tune_rounded,
             onPressed: () => context.push(Routes.profile),
           ),
         ] else
-          const Surface(
+          Surface(
             child: Text(
-              'Your profile is not set up yet. Open the app again to finish setup.',
+              context.tr(
+                'Your profile is not set up yet. Open the app again to finish setup.',
+              ),
             ),
           ),
+        const SizedBox(height: 14),
+        Surface(
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 12,
+            runSpacing: 8,
+            children: [
+              Text(
+                context.tr('Language'),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const LanguageToggle(),
+            ],
+          ),
+        ),
         const SizedBox(height: 22),
         Surface(
           padding: const EdgeInsets.symmetric(vertical: 4),
@@ -201,14 +241,16 @@ class MeScreen extends ConsumerWidget {
                   ),
                 _Link(
                   icon: Icons.file_download_outlined,
-                  title: 'Export stats',
-                  detail: 'Daily calories and water as a spreadsheet',
+                  title: context.tr('Export stats'),
+                  detail: context.tr(
+                    'Daily calories and water as a spreadsheet',
+                  ),
                   onTap: () => context.push(Routes.export),
                 ),
                 _Link(
                   icon: Icons.shield_outlined,
-                  title: 'Settings and privacy',
-                  detail: 'Language, data and deletion',
+                  title: context.tr('Settings and privacy'),
+                  detail: context.tr('Language, data and deletion'),
                   onTap: () => context.push(Routes.settings),
                 ),
               ],
@@ -218,14 +260,16 @@ class MeScreen extends ConsumerWidget {
         if (account != null) ...[
           const SizedBox(height: 18),
           SecondaryButton(
-            'Sign out',
+            context.tr('Sign out'),
             icon: Icons.logout_rounded,
             onPressed: state.busy ? null : () => signOut(context, ref, account),
           ),
         ],
         const SizedBox(height: 14),
-        const DisclaimerNotice(
-          text: 'BMI is a screening measure. PlateWise does not give medical advice.',
+        DisclaimerNotice(
+          text: context.tr(
+            'BMI is a screening measure. PlateWise does not give medical advice.',
+          ),
         ),
       ],
     );
@@ -262,14 +306,14 @@ class _Identity extends StatelessWidget {
               Semantics(
                 header: true,
                 child: Text(
-                  title,
+                  context.tr(title),
                   style: t.titleLarge,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               const SizedBox(height: 2),
               Text(
-                detail,
+                context.tr(detail),
                 style: t.bodyMedium?.copyWith(color: PlateColors.muted),
               ),
             ],
@@ -290,12 +334,12 @@ class _Stat extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          context.tr(label),
           style: Theme.of(context).textTheme.bodySmall
               ?.copyWith(color: PlateColors.muted),
         ),
         const SizedBox(height: 4),
-        Text(value, style: Theme.of(context).textTheme.titleLarge),
+        Text(context.tr(value), style: Theme.of(context).textTheme.titleLarge),
       ],
     ),
   );
@@ -313,14 +357,14 @@ class _Row extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            label,
+            context.tr(label),
             style: Theme.of(context).textTheme.bodyMedium
                 ?.copyWith(color: PlateColors.muted),
           ),
         ),
         Flexible(
           child: Text(
-            value,
+            context.tr(value),
             textAlign: TextAlign.end,
             style: Theme.of(context).textTheme.labelLarge,
           ),
@@ -344,8 +388,8 @@ class _Link extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ListTile(
     leading: Icon(icon, color: PlateColors.forest),
-    title: Text(title),
-    subtitle: Text(detail),
+    title: Text(context.tr(title)),
+    subtitle: Text(context.tr(detail)),
     trailing: const Icon(Icons.chevron_right_rounded),
     onTap: onTap,
   );

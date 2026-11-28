@@ -13,6 +13,7 @@ import '../data/nearby_providers.dart';
 import '../domain/nearby_meal.dart';
 import '../domain/nearby_services.dart';
 import '../domain/restaurant.dart';
+import '../../../core/l10n/l10n.dart';
 
 typedef _Area = ({GeoPoint point, double radius});
 
@@ -50,21 +51,24 @@ class SampleMenus extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SectionTitle(
-          'Sample meal suggestions',
-          detail: 'Illustrative menus and portions from fictional venues.',
+        SectionTitle(
+          context.tr('Sample meal suggestions'),
+          detail: context.tr(
+            'Illustrative menus and portions from fictional venues.',
+          ),
         ),
         const SizedBox(height: 7),
-        if (samples.isLoading) const LoadingState('Loading sample meals…'),
+        if (samples.isLoading)
+          LoadingState(context.tr('Loading sample meals…')),
         if (samples.hasError)
           ErrorState(
             failureMessage(samples.error!),
             retry: () => ref.invalidate(request),
           ),
         if (samples.value?.isEmpty ?? false)
-          const EmptyState(
-            'No sample meals available',
-            'Try a larger radius or choose Cumilla Town Hall.',
+          EmptyState(
+            context.tr('No sample meals available'),
+            context.tr('Try a larger radius or choose Cumilla Town Hall.'),
             icon: Icons.location_off_outlined,
           ),
         for (final meal in samples.value ?? <NearbyMeal>[]) ...[
@@ -86,7 +90,10 @@ class SampleMenus extends ConsumerWidget {
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                           Text(
-                            '${meal.restaurant} · ${meal.distance.toStringAsFixed(1)} km',
+                            context.tr('{p0} · {p1} km', {
+                              'p0': meal.restaurant,
+                              'p1': meal.distance.toStringAsFixed(1),
+                            }),
                           ),
                         ],
                       ),
@@ -94,13 +101,18 @@ class SampleMenus extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text('${meal.range.label} kcal · ${meal.portion}'),
+                Text(
+                  context.tr('{p0} kcal · {p1}', {
+                    'p0': meal.range.label,
+                    'p1': meal.portion,
+                  }),
+                ),
                 const SizedBox(height: 6),
                 BudgetFitBadge(meal.fit),
                 const SizedBox(height: 5),
                 TextButton(
                   onPressed: () => choose(context, ref, meal),
-                  child: const Text('Review this meal'),
+                  child: Text(context.tr('Review this meal')),
                 ),
               ],
             ),

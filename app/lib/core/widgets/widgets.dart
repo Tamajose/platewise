@@ -9,6 +9,7 @@ export 'confidence_badge.dart';
 export 'dialogs.dart';
 export 'headings.dart';
 export 'indicators.dart';
+export 'language_toggle.dart';
 export 'layout.dart';
 export 'media.dart';
 export 'nutrient_breakdown.dart';

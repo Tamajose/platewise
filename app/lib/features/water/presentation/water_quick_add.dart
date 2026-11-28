@@ -3,12 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../core/domain/day_log.dart';
-import '../../../core/format/number_format.dart';
 import '../../../core/presentation/routes.dart';
 import '../../../core/theme/plate_theme.dart';
 import '../../../core/widgets/widgets.dart';
 import 'water_amount_dialog.dart';
 import 'water_controller.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Today's water against the goal, with buttons to add some. [compact] hides
 /// the custom amount and links to the full water log instead.
@@ -28,18 +28,20 @@ class WaterQuickAdd extends ConsumerWidget {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text('Added $amount ml'),
+          content: Text(context.tr('Added {p0} ml', {'p0': amount})),
           // A snack bar with an action stays until dismissed unless told
           // otherwise, and it would keep covering the buttons beneath it.
           persist: false,
           duration: const Duration(seconds: 6),
           action: SnackBarAction(
-            label: 'Undo',
+            label: context.tr('Undo'),
             textColor: PlateColors.lime,
             onPressed: () async {
               final error = await controller.remove(id);
-              if (error != null) {
-                messenger.showSnackBar(SnackBar(content: Text(error)));
+              if (error != null && context.mounted) {
+                messenger.showSnackBar(
+                  SnackBar(content: Text(context.tr(error))),
+                );
               }
             },
           ),
@@ -68,12 +70,15 @@ class WaterQuickAdd extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Hydration',
+                      context.tr('Hydration'),
                       style: Theme.of(context).textTheme.titleMedium
                           ?.copyWith(color: PlateColors.blue),
                     ),
                     Text(
-                      '${number(amount)} / ${number(goal)} ml',
+                      context.tr('{p0} / {p1} ml', {
+                        'p0': context.number(amount),
+                        'p1': context.number(goal),
+                      }),
                       style: Theme.of(context).textTheme.titleLarge
                           ?.copyWith(color: PlateColors.blue),
                     ),
@@ -83,7 +88,7 @@ class WaterQuickAdd extends ConsumerWidget {
               if (compact)
                 IconButton(
                   onPressed: () => context.push(Routes.water),
-                  tooltip: 'Open water log',
+                  tooltip: context.tr('Open water log'),
                   icon: const Icon(
                     Icons.arrow_forward_rounded,
                     color: PlateColors.blue,
@@ -97,7 +102,10 @@ class WaterQuickAdd extends ConsumerWidget {
             child: LinearProgressIndicator(
               value: (amount / goal).clamp(0, 1).toDouble(),
               minHeight: 7,
-              semanticsLabel: '$amount of $goal milliliters logged',
+              semanticsLabel: context.tr('{p0} of {p1} milliliters logged', {
+                'p0': amount,
+                'p1': goal,
+              }),
               color: PlateColors.blue,
               backgroundColor: PlateColors.line,
             ),
@@ -109,14 +117,14 @@ class WaterQuickAdd extends ConsumerWidget {
             children: [
               for (final preset in [250, 500])
                 SecondaryButton(
-                  '+$preset ml',
+                  context.tr('+{p0} ml', {'p0': preset}),
                   onPressed: state.busy
                       ? null
                       : () => add(context, ref, preset),
                 ),
               if (!compact)
                 SecondaryButton(
-                  'Custom',
+                  context.tr('Custom'),
                   icon: Icons.add,
                   onPressed: state.busy
                       ? null
@@ -129,7 +137,7 @@ class WaterQuickAdd extends ConsumerWidget {
                 ),
             ],
           ),
-          if (state.busy) const LoadingState('Saving water…'),
+          if (state.busy) LoadingState(context.tr('Saving water…')),
           if (state.error != null) ...[
             const SizedBox(height: 8),
             ErrorState(

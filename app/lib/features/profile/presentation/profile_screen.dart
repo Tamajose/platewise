@@ -6,6 +6,7 @@ import '../../../core/presentation/failure_message.dart';
 import '../../../core/presentation/session_state.dart';
 import '../../../core/widgets/widgets.dart';
 import 'profile_form.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Edit the saved profile. Closes when saved.
 class ProfileScreen extends ConsumerWidget {
@@ -13,12 +14,12 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => Standalone(
-    title: 'Profile',
+    title: context.tr('Profile'),
     body: ref
         .watch(overviewProvider)
         .when(
-          loading: () => const PageScroll(
-            children: [LoadingState('Loading your profile…')],
+          loading: () => PageScroll(
+            children: [LoadingState(context.tr('Loading your profile…'))],
           ),
           error: (e, _) => PageScroll(
             children: [

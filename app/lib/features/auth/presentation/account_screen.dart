@@ -10,6 +10,7 @@ import '../../../core/widgets/widgets.dart';
 import '../data/account_providers.dart';
 import '../domain/account_info.dart';
 import 'account_controller.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Keep a guest log by adding a verified email and password, sign in to an
 /// existing account, or sign out.
@@ -41,9 +42,11 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     if (hasGuestLog) {
       final proceed = await ConfirmationSheet.ask(
         context,
-        title: 'Open another account?',
-        message: 'This device will leave the guest log and open the existing account. Guest entries stay separate and can become inaccessible. Use guest upgrade to keep this log.',
-        action: 'Open existing account',
+        title: context.tr('Open another account?'),
+        message: context.tr(
+          'This device will leave the guest log and open the existing account. Guest entries stay separate and can become inaccessible. Use guest upgrade to keep this log.',
+        ),
+        action: context.tr('Open existing account'),
       );
       if (!proceed || !mounted) return;
     }
@@ -55,9 +58,9 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
   Future<void> signOut() async {
     final yes = await ConfirmationSheet.ask(
       context,
-      title: 'Sign out?',
-      message: 'You can reopen this account by signing in again.',
-      action: 'Sign out',
+      title: context.tr('Sign out?'),
+      message: context.tr('You can reopen this account by signing in again.'),
+      action: context.tr('Sign out'),
     );
     if (!yes || !mounted) return;
     final done = await controller.signOut();
@@ -70,8 +73,8 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     keyboardType: TextInputType.emailAddress,
     maxLength: 254,
     autofillHints: const [AutofillHints.email],
-    decoration: const InputDecoration(
-      labelText: 'Email address',
+    decoration: InputDecoration(
+      labelText: context.tr('Email address'),
       counterText: '',
     ),
   );
@@ -82,7 +85,10 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     obscureText: true,
     maxLength: 128,
     autofillHints: [isNew ? AutofillHints.newPassword : AutofillHints.password],
-    decoration: const InputDecoration(labelText: 'Password', counterText: ''),
+    decoration: InputDecoration(
+      labelText: context.tr('Password'),
+      counterText: '',
+    ),
   );
 
   @override
@@ -90,13 +96,15 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     final demo = ref.watch(sessionRepositoryProvider).isDemo;
     final state = ref.watch(accountControllerProvider(widget.initialSignIn));
     return Standalone(
-      title: 'Account',
+      title: context.tr('Account'),
       body: demo
-          ? const PageScroll(
+          ? PageScroll(
               children: [
                 EmptyState(
-                  'Local demo',
-                  'Configure a live Supabase project to sign in or keep a guest log across devices.',
+                  context.tr('Local demo'),
+                  context.tr(
+                    'Configure a live Supabase project to sign in or keep a guest log across devices.',
+                  ),
                   icon: Icons.person_outline,
                 ),
               ],
@@ -104,8 +112,10 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
           : ref
                 .watch(accountProvider)
                 .when(
-                  loading: () => const PageScroll(
-                    children: [LoadingState('Checking your account…')],
+                  loading: () => PageScroll(
+                    children: [
+                      LoadingState(context.tr('Checking your account…')),
+                    ],
                   ),
                   error: (e, _) => PageScroll(
                     children: [
@@ -129,14 +139,16 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
       children: [
         PageHeading(
           state.signingIn
-              ? 'Sign in to PlateWise'
+              ? context.tr('Sign in to PlateWise')
               : account.guest
-              ? 'Keep your guest log'
-              : 'Your account',
+              ? context.tr('Keep your guest log')
+              : context.tr('Your account'),
           detail: state.signingIn
-              ? 'Open the log linked to your permanent account.'
+              ? context.tr('Open the log linked to your permanent account.')
               : account.guest
-              ? 'Verify an email, then set a password to keep the same log.'
+              ? context.tr(
+                  'Verify an email, then set a password to keep the same log.',
+                )
               : account.email,
         ),
         const SizedBox(height: 13),
@@ -145,7 +157,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
           const SizedBox(height: 8),
         ],
         if (state.notice != null) ...[
-          Surface(child: Text(state.notice!)),
+          Surface(child: Text(context.tr(state.notice!))),
           const SizedBox(height: 8),
         ],
         if (state.signingIn) ...[
@@ -160,12 +172,12 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
           ),
           const SizedBox(height: 11),
           PrimaryButton(
-            'Sign in',
+            context.tr('Sign in'),
             busy: busy,
             onPressed: () => signIn(account),
           ),
           SecondaryButton(
-            'Back to account options',
+            context.tr('Back to account options'),
             onPressed: busy
                 ? null
                 : () {
@@ -178,33 +190,40 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             if (linkPending) ...[
               Surface(
                 child: Text(
-                  'Verification is pending for ${account.pendingEmail}. Check your email, then return here.',
+                  context.tr(
+                    'Verification is pending for {p0}. Check your email, then return here.',
+                    {'p0': account.pendingEmail},
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
               SecondaryButton(
-                'Check verification',
+                context.tr('Check verification'),
                 onPressed: () => ref.invalidate(accountProvider),
               ),
             ],
             emailField(busy),
             const SizedBox(height: 8),
             PrimaryButton(
-              linkPending ? 'Resend verification' : 'Link my email',
+              linkPending
+                  ? context.tr('Resend verification')
+                  : context.tr('Link my email'),
               busy: busy,
               onPressed: () => controller.linkEmail(email.text),
             ),
           ],
           if (canSetPassword && !state.passwordSaved) ...[
             const SizedBox(height: 8),
-            const Text(
-              'Use at least 10 characters and choose a unique password.',
+            Text(
+              context.tr(
+                'Use at least 10 characters and choose a unique password.',
+              ),
             ),
             const SizedBox(height: 8),
             passwordField(busy, isNew: true),
             const SizedBox(height: 8),
             PrimaryButton(
-              'Set account password',
+              context.tr('Set account password'),
               busy: busy,
               onPressed: () async {
                 final saved = await controller.setPassword(password.text);
@@ -215,11 +234,14 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
           const SizedBox(height: 9),
           if (account.guest)
             SecondaryButton(
-              'Sign in to an existing account',
+              context.tr('Sign in to an existing account'),
               onPressed: busy ? null : () => controller.showSignIn(true),
             )
           else
-            SecondaryButton('Sign out', onPressed: busy ? null : signOut),
+            SecondaryButton(
+              context.tr('Sign out'),
+              onPressed: busy ? null : signOut,
+            ),
         ],
       ],
     );

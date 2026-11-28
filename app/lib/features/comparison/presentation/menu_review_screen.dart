@@ -10,6 +10,7 @@ import 'menu_dish_dialog.dart';
 import 'menu_review_args.dart';
 import 'menu_review_controller.dart';
 import 'small_budget_note.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Check the dishes found on a menu, fix names and portions, pick two or
 /// three, and compare them.
@@ -53,15 +54,19 @@ class MenuReviewScreen extends ConsumerWidget {
     final state = ref.watch(menuReviewControllerProvider(args));
     final controller = ref.read(menuReviewControllerProvider(args).notifier);
     return Standalone(
-      title: 'Review menu',
+      title: context.tr('Review menu'),
       body: PageScroll(
         maxWidth: 880,
         children: [
           PageHeading(
-            'Check menu options',
+            context.tr('Check menu options'),
             detail: args.sample
-                ? 'Sample menu. Edit any dish, then compare two or three options.'
-                : 'Correct names and portions. Leave calories blank when the menu gives only a price.',
+                ? context.tr(
+                    'Sample menu. Edit any dish, then compare two or three options.',
+                  )
+                : context.tr(
+                    'Correct names and portions. Leave calories blank when the menu gives only a price.',
+                  ),
           ),
           SmallBudgetNote(args.budget),
           const SizedBox(height: 12),
@@ -76,7 +81,9 @@ class MenuReviewScreen extends ConsumerWidget {
                 children: [
                   Checkbox(
                     value: state.selected.contains(i),
-                    semanticLabel: 'Select menu dish ${i + 1}',
+                    semanticLabel: context.tr('Select menu dish {p0}', {
+                      'p0': i + 1,
+                    }),
                     onChanged: state.busy
                         ? null
                         : (value) => controller.select(i, value ?? false),
@@ -88,11 +95,20 @@ class MenuReviewScreen extends ConsumerWidget {
                         contentPadding: EdgeInsets.zero,
                         title: Text(
                           state.options[i].name.isEmpty
-                              ? 'Enter dish ${i + 1}'
+                              ? context.tr('Enter dish {p0}', {'p0': i + 1})
                               : state.options[i].name,
                         ),
                         subtitle: Text(
-                          '${state.options[i].portion ?? 'Portion unlisted'} · ${state.options[i].kcal == null ? 'Inference needed' : '${state.options[i].kcal} kcal entered'}',
+                          context.tr('{p0} · {p1}', {
+                            'p0':
+                                state.options[i].portion ??
+                                context.tr('Portion unlisted'),
+                            'p1': state.options[i].kcal == null
+                                ? context.tr('Inference needed')
+                                : context.tr('{p0} kcal entered', {
+                                    'p0': state.options[i].kcal,
+                                  }),
+                          }),
                         ),
                         onTap: state.busy
                             ? null
@@ -104,7 +120,7 @@ class MenuReviewScreen extends ConsumerWidget {
                     onPressed: state.busy
                         ? null
                         : () => edit(context, ref, state.options[i], i),
-                    tooltip: 'Edit dish ${i + 1}',
+                    tooltip: context.tr('Edit dish {p0}', {'p0': i + 1}),
                     icon: const Icon(Icons.edit_outlined),
                   ),
                 ],
@@ -118,19 +134,19 @@ class MenuReviewScreen extends ConsumerWidget {
                   ? null
                   : () => edit(context, ref, const MenuOption(''), null),
               icon: const Icon(Icons.add),
-              label: const Text('Add a dish'),
+              label: Text(context.tr('Add a dish')),
             ),
           if (state.error != null) ...[
             ErrorState(state.error!),
             const SizedBox(height: 8),
           ],
           PrimaryButton(
-            'Compare selected dishes',
+            context.tr('Compare selected dishes'),
             onPressed: controller.compare,
             busy: state.busy,
             icon: Icons.compare_arrows_rounded,
           ),
-          if (state.busy) const LoadingState('Preparing menu estimates…'),
+          if (state.busy) LoadingState(context.tr('Preparing menu estimates…')),
           if (state.result != null) ...[
             const SizedBox(height: 15),
             DecisionResults(

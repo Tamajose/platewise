@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../core/widgets/widgets.dart';
 import '../domain/settings_rules.dart';
 import 'settings_controller.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Submit a known portion and calorie range for review.
 class CorrectionScreen extends ConsumerStatefulWidget {
@@ -45,7 +46,7 @@ class _CorrectionScreenState extends ConsumerState<CorrectionScreen> {
     final sent = await controller.submit(built.correction!);
     if (!sent || !mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Correction submitted for review')),
+      SnackBar(content: Text(context.tr('Correction submitted for review'))),
     );
     context.pop();
   }
@@ -54,22 +55,27 @@ class _CorrectionScreenState extends ConsumerState<CorrectionScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(correctionControllerProvider);
     return Standalone(
-      title: 'Share a correction',
+      title: context.tr('Share a correction'),
       body: Form(
         key: form,
         child: PageScroll(
           children: [
-            const PageHeading(
-              'Food correction',
-              detail: 'Submit a known portion and calorie range for review. Photos and personal notes stay in your log.',
+            PageHeading(
+              context.tr('Food correction'),
+              detail: context.tr(
+                'Submit a known portion and calorie range for review. Photos and personal notes stay in your log.',
+              ),
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: food,
-              decoration: const InputDecoration(labelText: 'Food'),
+              decoration: InputDecoration(labelText: context.tr('Food')),
               items: [
                 for (final option in correctionFoods)
-                  DropdownMenuItem(value: option, child: Text(option)),
+                  DropdownMenuItem(
+                    value: option,
+                    child: Text(context.tr(option)),
+                  ),
               ],
               onChanged: state.busy
                   ? null
@@ -83,12 +89,15 @@ class _CorrectionScreenState extends ConsumerState<CorrectionScreen> {
             ]) ...[
               TextFormField(
                 controller: field.$1,
-                decoration: InputDecoration(labelText: field.$2),
+                decoration: InputDecoration(labelText: context.tr(field.$2)),
                 keyboardType: TextInputType.number,
                 validator: (v) {
                   final n = int.tryParse((v ?? '').trim());
                   return n == null || n < field.$3 || n > field.$4
-                      ? 'Enter ${field.$3}–${field.$4}.'
+                      ? context.tr('Enter {p0}–{p1}.', {
+                          'p0': field.$3,
+                          'p1': field.$4,
+                        })
                       : null;
                 },
               ),
@@ -99,7 +108,7 @@ class _CorrectionScreenState extends ConsumerState<CorrectionScreen> {
               const SizedBox(height: 8),
             ],
             PrimaryButton(
-              'Submit for review',
+              context.tr('Submit for review'),
               onPressed: submit,
               busy: state.busy,
             ),

@@ -5,6 +5,8 @@ import 'package:material_ui/material_ui.dart';
 
 import '../core/data/core_providers.dart';
 import '../core/domain/dates.dart';
+import '../core/l10n/app_language.dart';
+import '../core/l10n/language_providers.dart';
 import '../core/presentation/routes.dart';
 import '../features/auth/data/account_providers.dart';
 import '../features/auth/domain/account_rules.dart';
@@ -70,7 +72,12 @@ class _PlateWiseAppState extends ConsumerState<PlateWiseApp>
     return MaterialApp.router(
       title: 'PlateWise',
       debugShowCheckedModeBanner: false,
-      theme: plateTheme(),
+      theme: plateTheme(
+        bangla: ref.watch(appLanguageProvider) == AppLanguage.bn,
+      ),
+      locale: ref.watch(appLanguageProvider).locale,
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      supportedLocales: [for (final l in AppLanguage.values) l.locale],
       routerConfig: ref.watch(routerProvider),
     );
   }

@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../core/domain/domain.dart';
@@ -8,6 +7,7 @@ import '../../../core/presentation/review_args.dart';
 import '../../../core/presentation/routes.dart';
 import '../../../core/widgets/widgets.dart';
 import 'today_controller.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// One logged meal, with actions to edit or delete it.
 class MealListItem extends ConsumerWidget {
@@ -21,16 +21,17 @@ class MealListItem extends ConsumerWidget {
   Future<void> delete(BuildContext context, WidgetRef ref) async {
     final yes = await ConfirmationSheet.ask(
       context,
-      title: 'Delete this meal?',
-      message: 'This removes the meal and any photo saved with it.',
-      action: 'Delete meal',
+      title: context.tr('Delete this meal?'),
+      message: context.tr('This removes the meal and any photo saved with it.'),
+      action: context.tr('Delete meal'),
       danger: true,
     );
     if (!yes || !context.mounted) return;
     final error = await ref.read(todayActionsProvider).deleteMeal(meal.id);
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(error ?? 'Meal deleted')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.tr(error ?? 'Meal deleted'))),
+    );
   }
 
   @override
@@ -45,21 +46,29 @@ class MealListItem extends ConsumerWidget {
             : Icons.restaurant_outlined,
       ),
       title: Text(
-        meal.draft.title,
+        context.tr(meal.draft.title),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
         style: Theme.of(context).textTheme.titleMedium,
       ),
       subtitle: Text(
-        '${DateFormat.jm().format(localTime(meal.at, zone))} · ${meal.range.label} kcal',
+        context.tr('{p0} · {p1} kcal', {
+          'p0': context.timeFormat.format(localTime(meal.at, zone)),
+          'p1': meal.range.label,
+        }),
       ),
       trailing: PopupMenuButton<String>(
-        tooltip: 'Actions for ${meal.draft.title}',
+        tooltip: context.tr('Actions for {p0}', {
+          'p0': context.tr(meal.draft.title),
+        }),
         onSelected: (value) =>
             value == 'edit' ? edit(context) : delete(context, ref),
-        itemBuilder: (_) => const [
-          PopupMenuItem(value: 'edit', child: Text('Edit meal')),
-          PopupMenuItem(value: 'delete', child: Text('Delete meal')),
+        itemBuilder: (_) => [
+          PopupMenuItem(value: 'edit', child: Text(context.tr('Edit meal'))),
+          PopupMenuItem(
+            value: 'delete',
+            child: Text(context.tr('Delete meal')),
+          ),
         ],
       ),
     ),

@@ -6,7 +6,7 @@ import '../../../core/data/core_providers.dart';
 import '../../../core/domain/domain.dart';
 import '../../../core/presentation/failure_message.dart';
 import '../../../core/presentation/review_args.dart';
-import '../../../core/presentation/session_state.dart';
+import '../../../core/presentation/ai_language.dart';
 import '../data/meal_log_providers.dart';
 
 enum CaptureMethod { photo, text, voice }
@@ -59,9 +59,7 @@ class CaptureState {
 /// text, and the estimate request.
 class CaptureController extends Notifier<CaptureState> {
   @override
-  CaptureState build() => CaptureState(
-    language: ref.read(overviewProvider).value?.profile?.language ?? 'en',
-  );
+  CaptureState build() => CaptureState(language: ref.read(aiLanguageProvider));
 
   void selectMethod(CaptureMethod method) {
     if (state.busy) return;

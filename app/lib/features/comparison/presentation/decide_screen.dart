@@ -4,7 +4,6 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../core/data/core_providers.dart';
 import '../../../core/domain/domain.dart';
-import '../../../core/format/number_format.dart';
 import '../../../core/presentation/photo_source_sheet.dart';
 import '../../../core/presentation/routes.dart';
 import '../../../core/presentation/session_state.dart';
@@ -14,6 +13,7 @@ import '../domain/decision.dart';
 import 'decide_controller.dart';
 import 'decision_results.dart';
 import 'small_budget_note.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Compare meals before choosing: dishes from a menu, or two or three photos.
 class DecideScreen extends ConsumerStatefulWidget {
@@ -74,9 +74,11 @@ class _DecideScreenState extends ConsumerState<DecideScreen> {
     return PageScroll(
       maxWidth: 1080,
       children: [
-        const PageHeading(
-          'Decide',
-          detail: 'Compare portions and calorie ranges before you choose.',
+        PageHeading(
+          context.tr('Decide'),
+          detail: context.tr(
+            'Compare portions and calorie ranges before you choose.',
+          ),
         ),
         const SizedBox(height: 15),
         Surface(
@@ -95,15 +97,19 @@ class _DecideScreenState extends ConsumerState<DecideScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Meal budget',
+                      context.tr('Meal budget'),
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     Text(
                       state.useRemaining
                           ? (remaining == null
-                                ? 'No positive daily budget available'
-                                : '${number(remaining)} kcal remaining today')
-                          : 'Set a budget for this meal',
+                                ? context.tr(
+                                    'No positive daily budget available',
+                                  )
+                                : context.tr('{p0} kcal remaining today', {
+                                    'p0': context.number(remaining),
+                                  }))
+                          : context.tr('Set a budget for this meal'),
                     ),
                     if (!state.useRemaining) ...[
                       const SizedBox(height: 8),
@@ -111,9 +117,9 @@ class _DecideScreenState extends ConsumerState<DecideScreen> {
                         controller: budget,
                         enabled: !state.busy,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Meal budget (kcal)',
-                          hintText: 'Optional',
+                        decoration: InputDecoration(
+                          labelText: context.tr('Meal budget (kcal)'),
+                          hintText: context.tr('Optional'),
                         ),
                         onChanged: controller.setBudgetText,
                       ),
@@ -125,8 +131,8 @@ class _DecideScreenState extends ConsumerState<DecideScreen> {
                           : controller.toggleBudgetMode,
                       child: Text(
                         state.useRemaining
-                            ? 'Set a meal budget'
-                            : 'Use today’s remaining budget',
+                            ? context.tr('Set a meal budget')
+                            : context.tr('Use today’s remaining budget'),
                       ),
                     ),
                   ],
@@ -140,31 +146,34 @@ class _DecideScreenState extends ConsumerState<DecideScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SectionTitle(
-                'Plan a dish',
-                detail: 'Name a dish you plan to cook for a suggested portion and possible recipe adjustments within your budget.',
+              SectionTitle(
+                context.tr('Plan a dish'),
+                detail: context.tr(
+                  'Name a dish you plan to cook for a suggested portion and possible recipe adjustments within your budget.',
+                ),
               ),
               const SizedBox(height: 12),
               TextField(
                 enabled: !state.recommendationBusy,
                 onChanged: controller.setDishText,
                 maxLength: 300,
-                decoration: const InputDecoration(
-                  labelText: 'Dish you plan to cook',
-                  hintText: 'For example, chicken curry with rice',
+                buildCounter: context.counterBuilder,
+                decoration: InputDecoration(
+                  labelText: context.tr('Dish you plan to cook'),
+                  hintText: context.tr('For example, chicken curry with rice'),
                 ),
               ),
               const SizedBox(height: 8),
               PrimaryButton(
-                'Suggest a portion',
+                context.tr('Suggest a portion'),
                 icon: Icons.soup_kitchen_outlined,
                 busy: state.recommendationBusy,
                 onPressed: controller.recommendDish,
               ),
               if (state.recommendationBusy)
-                const Padding(
+                Padding(
                   padding: EdgeInsets.only(top: 12),
-                  child: LoadingState('Planning a portion…'),
+                  child: LoadingState(context.tr('Planning a portion…')),
                 ),
               if (state.recommendationError != null) ...[
                 const SizedBox(height: 10),
@@ -178,7 +187,7 @@ class _DecideScreenState extends ConsumerState<DecideScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Suggested portion',
+                        context.tr('Suggested portion'),
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 4),
@@ -187,12 +196,15 @@ class _DecideScreenState extends ConsumerState<DecideScreen> {
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                       Text(
-                        '${recommendation.range.label} kcal estimated · ${number(state.recommendationBudget!)} kcal budget',
+                        context.tr('{p0} kcal estimated · {p1} kcal budget', {
+                          'p0': recommendation.range.label,
+                          'p1': context.number(state.recommendationBudget!),
+                        }),
                       ),
                       if (recommendation.adjustments.isNotEmpty) ...[
                         const SizedBox(height: 12),
                         Text(
-                          'Possible recipe adjustments',
+                          context.tr('Possible recipe adjustments'),
                           style: Theme.of(context).textTheme.titleSmall,
                         ),
                         for (final adjustment in recommendation.adjustments)
@@ -204,7 +216,7 @@ class _DecideScreenState extends ConsumerState<DecideScreen> {
                       if (recommendation.assumptions.isNotEmpty) ...[
                         const SizedBox(height: 12),
                         Text(
-                          'Assumptions',
+                          context.tr('Assumptions'),
                           style: Theme.of(context).textTheme.titleSmall,
                         ),
                         for (final assumption in recommendation.assumptions)
@@ -214,8 +226,10 @@ class _DecideScreenState extends ConsumerState<DecideScreen> {
                           ),
                       ],
                       const SizedBox(height: 10),
-                      const Text(
-                        'Nutrition values are estimates, not guarantees or individualized medical advice. This plan has not been logged.',
+                      Text(
+                        context.tr(
+                          'Nutrition values are estimates, not guarantees or individualized medical advice. This plan has not been logged.',
+                        ),
                       ),
                     ],
                   ),
@@ -232,27 +246,29 @@ class _DecideScreenState extends ConsumerState<DecideScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SectionTitle(
-                  'Compare from a menu',
-                  detail: 'Review dish names and portions before comparing.',
+                SectionTitle(
+                  context.tr('Compare from a menu'),
+                  detail: context.tr(
+                    'Review dish names and portions before comparing.',
+                  ),
                 ),
                 const SizedBox(height: 14),
                 if (demo) ...[
                   PrimaryButton(
-                    'Review sample menu',
+                    context.tr('Review sample menu'),
                     icon: Icons.restaurant_menu_rounded,
                     onPressed: state.busy ? null : () => openMenu(sample: true),
                   ),
                   const SizedBox(height: 8),
                 ],
                 SecondaryButton(
-                  'Choose menu photo',
+                  context.tr('Choose menu photo'),
                   icon: Icons.photo_library_outlined,
                   onPressed: state.busy ? null : () => openMenu(scan: true),
                 ),
                 TextButton(
                   onPressed: state.busy ? null : openMenu,
-                  child: const Text('Type menu dishes'),
+                  child: Text(context.tr('Type menu dishes')),
                 ),
               ],
             ),
@@ -261,9 +277,9 @@ class _DecideScreenState extends ConsumerState<DecideScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SectionTitle(
-                  'Compare meal photos',
-                  detail: 'Add two or three options.',
+                SectionTitle(
+                  context.tr('Compare meal photos'),
+                  detail: context.tr('Add two or three options.'),
                 ),
                 const SizedBox(height: 12),
                 for (var i = 0; i < state.photos.length; i++) ...[
@@ -289,8 +305,8 @@ class _DecideScreenState extends ConsumerState<DecideScreen> {
                         Expanded(
                           child: Text(
                             state.photos[i] == null
-                                ? 'Meal option ${i + 1}'
-                                : 'Photo ${i + 1} added',
+                                ? context.tr('Meal option {p0}', {'p0': i + 1})
+                                : context.tr('Photo {p0} added', {'p0': i + 1}),
                           ),
                         ),
                         IconButton(
@@ -301,8 +317,8 @@ class _DecideScreenState extends ConsumerState<DecideScreen> {
                                 : Icons.edit_outlined,
                           ),
                           tooltip: state.photos[i] == null
-                              ? 'Add photo ${i + 1}'
-                              : 'Replace photo ${i + 1}',
+                              ? context.tr('Add photo {p0}', {'p0': i + 1})
+                              : context.tr('Replace photo {p0}', {'p0': i + 1}),
                         ),
                         if (state.photos[i] != null || i == 2)
                           IconButton(
@@ -310,7 +326,9 @@ class _DecideScreenState extends ConsumerState<DecideScreen> {
                                 ? null
                                 : () => controller.removePhoto(i),
                             icon: const Icon(Icons.close_rounded),
-                            tooltip: 'Remove option ${i + 1}',
+                            tooltip: context.tr('Remove option {p0}', {
+                              'p0': i + 1,
+                            }),
                           ),
                       ],
                     ),
@@ -323,11 +341,11 @@ class _DecideScreenState extends ConsumerState<DecideScreen> {
                     child: TextButton.icon(
                       onPressed: state.busy ? null : controller.addOption,
                       icon: const Icon(Icons.add),
-                      label: const Text('Add a third option'),
+                      label: Text(context.tr('Add a third option')),
                     ),
                   ),
                 PrimaryButton(
-                  'Compare photos',
+                  context.tr('Compare photos'),
                   icon: Icons.compare_arrows_rounded,
                   busy: state.busy,
                   onPressed: state.canComparePhotos
@@ -338,7 +356,7 @@ class _DecideScreenState extends ConsumerState<DecideScreen> {
             ),
           ),
         ),
-        if (state.busy) const LoadingState('Working on your options…'),
+        if (state.busy) LoadingState(context.tr('Working on your options…')),
         if (state.error != null) ...[
           const SizedBox(height: 10),
           ErrorState(state.error!),

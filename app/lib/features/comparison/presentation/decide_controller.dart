@@ -7,6 +7,7 @@ import '../../../core/data/core_providers.dart';
 import '../../../core/domain/domain.dart';
 import '../../../core/presentation/failure_message.dart';
 import '../../../core/presentation/review_args.dart';
+import '../../../core/presentation/ai_language.dart';
 import '../../../core/presentation/session_state.dart';
 import '../data/comparison_providers.dart';
 import '../domain/compare_photos.dart';
@@ -188,8 +189,7 @@ class DecideController extends Notifier<DecideState> {
         clearRecommendation: true,
         clearRecommendationError: true,
       );
-      final language =
-          ref.read(overviewProvider).value?.profile?.language ?? 'en';
+      final language = ref.read(aiLanguageProvider);
       final recommendation = await ref
           .read(comparisonRepositoryProvider)
           .recommendDish(dish, language, budget);
@@ -258,9 +258,8 @@ class DecideController extends Notifier<DecideState> {
     String? uploaded;
     state = state.copyWith(busy: scan != null, clearError: true);
     try {
-      final overview = ref.read(overviewProvider).value;
       final budget = _readBudget();
-      final language = overview?.profile?.language ?? 'en';
+      final language = ref.read(aiLanguageProvider);
       final repository = ref.read(comparisonRepositoryProvider);
       if (scan != null) {
         final photo = await ref.read(photoPickerProvider).pick(scan);

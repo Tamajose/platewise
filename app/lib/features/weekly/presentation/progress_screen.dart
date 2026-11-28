@@ -1,9 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../core/data/core_providers.dart';
-import '../../../core/format/number_format.dart';
 import '../../../core/presentation/failure_message.dart';
 import '../../../core/presentation/session_state.dart';
 import '../../../core/theme/plate_theme.dart';
@@ -11,6 +9,7 @@ import '../../../core/widgets/widgets.dart';
 import '../domain/weekly_report.dart';
 import 'summary_controller.dart';
 import 'week_chart.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// The last seven days: calories against the target, nutrients and a summary.
 class ProgressScreen extends ConsumerWidget {
@@ -20,8 +19,8 @@ class ProgressScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) => ref
       .watch(overviewProvider)
       .when(
-        loading: () => const PageScroll(
-          children: [LoadingState('Loading weekly progress…')],
+        loading: () => PageScroll(
+          children: [LoadingState(context.tr('Loading weekly progress…'))],
         ),
         error: (e, _) => PageScroll(
           children: [
@@ -33,24 +32,26 @@ class ProgressScreen extends ConsumerWidget {
         ),
         data: (overview) {
           final report = WeeklyReport(overview.week);
-          final date = DateFormat('MMM d');
+          final date = context.dateFormat('MMM d');
           final average = report.average;
           final target = report.targetAverage;
           return PageScroll(
             maxWidth: 1080,
             children: [
               PageHeading(
-                'Progress',
+                context.tr('Progress'),
                 eyebrow:
                     '${date.format(report.days.first.day)}–${date.format(report.days.last.day)}',
-                detail: 'Your last seven local dates, including today.',
+                detail: context.tr(
+                  'Your last seven local dates, including today.',
+                ),
               ),
               const SizedBox(height: 12),
               if (overview.sampleHistory) ...[
-                const Align(
+                Align(
                   alignment: Alignment.centerLeft,
                   child: IndicatorTag(
-                    'Sample history',
+                    context.tr('Sample history'),
                     icon: Icons.history_rounded,
                   ),
                 ),
@@ -66,16 +67,23 @@ class ProgressScreen extends ConsumerWidget {
                       primaryFlex: 1,
                       secondaryFlex: 1,
                       primary: MetricCard(
-                        label: 'Meal coverage',
-                        value: '${report.logged.length} / 7 days',
-                        detail: 'Days with a confirmed meal',
+                        label: context.tr('Meal coverage'),
+                        value: context.tr('{p0} / 7 days', {
+                          'p0': report.logged.length,
+                        }),
+                        detail: context.tr('Days with a confirmed meal'),
                       ),
                       secondary: MetricCard(
-                        label: 'Ranges on target',
+                        label: context.tr('Ranges on target'),
                         value: report.paired.isEmpty
-                            ? 'Unavailable'
-                            : '${report.overlap} / ${report.paired.length} days',
-                        detail: 'At least part of the range overlaps',
+                            ? context.tr('Unavailable')
+                            : context.tr('{p0} / {p1} days', {
+                                'p0': report.overlap,
+                                'p1': report.paired.length,
+                              }),
+                        detail: context.tr(
+                          'At least part of the range overlaps',
+                        ),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -85,14 +93,28 @@ class ProgressScreen extends ConsumerWidget {
                         children: [
                           if (average != null)
                             Text(
-                              'Mean logged intake: ${number(average)} kcal on ${report.logged.length} days.',
+                              context.tr(
+                                'Mean logged intake: {p0} kcal on {p1} days.',
+                                {
+                                  'p0': context.number(average),
+                                  'p1': report.logged.length,
+                                },
+                              ),
                             ),
                           if (target != null)
                             Text(
-                              'Mean target: ${number(target)} kcal across ${report.paired.length} logged days with a target.',
+                              context.tr(
+                                'Mean target: {p0} kcal across {p1} logged days with a target.',
+                                {
+                                  'p0': context.number(target),
+                                  'p1': report.paired.length,
+                                },
+                              ),
                             ),
-                          const Text(
-                            'A partial log cannot establish what you ate for the whole day.',
+                          Text(
+                            context.tr(
+                              'A partial log cannot establish what you ate for the whole day.',
+                            ),
                           ),
                         ],
                       ),
@@ -101,10 +123,11 @@ class ProgressScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 15),
-              const SectionTitle(
-                'Nutrients',
-                detail:
-                    'Estimated totals show how many items supplied each value.',
+              SectionTitle(
+                context.tr('Nutrients'),
+                detail: context.tr(
+                  'Estimated totals show how many items supplied each value.',
+                ),
               ),
               const SizedBox(height: 7),
               NutrientBreakdown(report.items),
@@ -125,9 +148,11 @@ class _WeeklySummary extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (report.facts.isEmpty) {
-      return const EmptyState(
-        'More logs needed',
-        'A weekly summary becomes available when meals are logged on at least two days.',
+      return EmptyState(
+        context.tr('More logs needed'),
+        context.tr(
+          'A weekly summary becomes available when meals are logged on at least two days.',
+        ),
         icon: Icons.insights_rounded,
       );
     }
@@ -143,26 +168,27 @@ class _WeeklySummary extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SectionTitle(
-            demo ? 'Weekly recap' : 'AI weekly summary',
+            demo ? context.tr('Weekly recap') : context.tr('AI weekly summary'),
             detail: demo
-                ? 'Calculated from the displayed demo aggregates.'
-                : 'Uses the counts and totals shown here.',
+                ? context.tr('Calculated from the displayed demo aggregates.')
+                : context.tr('Uses the counts and totals shown here.'),
           ),
           const SizedBox(height: 8),
           for (final sentence in sentences)
             Padding(
               padding: const EdgeInsets.only(bottom: 5),
-              child: Text(sentence),
+              child: Text(context.tr(sentence)),
             ),
           if (!demo && state.summary == null)
             SecondaryButton(
-              'Generate weekly summary',
+              context.tr('Generate weekly summary'),
               icon: Icons.auto_awesome_outlined,
               onPressed: state.loading
                   ? null
                   : ref.read(summaryControllerProvider(key).notifier).generate,
             ),
-          if (state.loading) const LoadingState('Preparing a short summary…'),
+          if (state.loading)
+            LoadingState(context.tr('Preparing a short summary…')),
           if (state.error != null) ...[
             const SizedBox(height: 6),
             ErrorState(state.error!),
